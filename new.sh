@@ -1,6 +1,7 @@
 #!/bin/bash
 
-#!/bin/bash
+
+
 
 #vps="azr";
 vps="azr";
@@ -9,9 +10,6 @@ vps="azr";
 	#source="http://"
 #else
 	source="https://raw.githubusercontent.com/Infotricky/Ll.O.L"
-#fi
-
-
 
 
 echo "
