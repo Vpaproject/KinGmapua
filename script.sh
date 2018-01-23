@@ -1,9 +1,9 @@
 #!/bin/bash
 # ******************************************
-# Program: Autoscript Servis Nobita 2017
-# Website: AutoScriptNobita.tk
-# Developer: Ruzaidie
-# Nickname: NobiNobita95
+# Program: Autoscript Servis Fluxo704 2018
+# Website: Fluxo704.tk
+# Developer: rosmah mansor
+# Nickname: Fluxo704
 # Date: 22-07-2016
 # Last Updated: 22-08-2017
 # ******************************************
@@ -23,7 +23,7 @@ echo "TUN is not available"
 exit 3
 fi
 echo "
-AUTOSCRIPT BY AUTOSCRIPTNOBITA.TK
+AUTOSCRIPT BY Fluxo704.TK
 
 AMBIL PERHATIAN !!!"
 clear
@@ -89,7 +89,7 @@ sed -i "s/ipserver/$myip/g" /etc/squid3/squid.conf
 sed -i "s/ipserver/$myip/g" /etc/squid/squid.conf
 # openvpn
 apt-get -y install openvpn
-wget -O /etc/openvpn/openvpn.tar "https://github.com/Apache07/07script/blob/master/07/openvpn.tar?raw=true"
+wget -O /etc/openvpn/openvpn.tar "https://github.com/Apache07/07script/raw/master/07/openvpn.tar?raw=true"
 cd /etc/openvpn/;tar xf openvpn.tar;rm openvpn.tar
 wget -O /etc/rc.local "https://raw.githubusercontent.com/Apache07/07script/master/007/rc.local";chmod +x /etc/rc.local
 #wget -O /etc/iptables.up.rules "https://raw.githubusercontent.com/Apache07/07script/master/007/iptables.up.rules"
@@ -101,7 +101,7 @@ rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
 wget -O /etc/php/7.0/fpm/pool.d/www.conf "https://raw.githubusercontent.com/Apache07/07script/master/007/www.conf"
 mkdir -p /home/vps/public_html
-echo "<pre>Setup by Nobita95 | telegram @nobinobita95 | website autoscriptnobita.tk</pre>" > /home/vps/public_html/index.php
+echo "<pre>Setup by Fluxo704 | telegram @Fluxo704 | website Fluxo704.tk</pre>" > /home/vps/public_html/index.php
 echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
 wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/Apache07/07script/master/007/vps.conf"
 sed -i 's/listen = \/var\/run\/php7.0-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php/7.0/fpm/pool.d/www.conf
@@ -124,9 +124,9 @@ service webmin restart
 service squid restart
 service fail2ban restart
 clear
-# SELASAI SUDAH BOSS! ( AutoScriptNobita.Tk )
+# SELASAI SUDAH BOSS! ( Fluxo704.Tk )
 echo "========================================"  | tee -a log-install.txt
-echo "Service Autoscript Nobita (NOBITA SCRIPT 2017)"  | tee -a log-install.txt
+echo "Service Autoscript Fluxo704 (Fluxo704 SCRIPT 2018)"  | tee -a log-install.txt
 echo "----------------------------------------"  | tee -a log-install.txt
 echo ""  | tee -a log-install.txt
 echo "nginx : http://$myip:80"   | tee -a log-install.txt
