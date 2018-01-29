@@ -107,11 +107,11 @@ echo "screenfetch" >> .profile
 apt-get -y install nginx php5-fpm php5-cli libexpat1-dev libxml-parser-perl
 rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
-wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/cucuatok93/teamcck/master/nginx.conf"
+wget -O /etc/nginx/nginx.conf "http://insomnet4u.me/aneka/aneka/nginx.conf"
 mkdir -p /home/vps/public_html
 echo "<pre>Setup by Dragon96 | telegram @ranger_9699 | whatsapp +60162327524</pre>" > /home/vps/public_html/index.php
 echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
-wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/cucuatok93/teamcck/master/vps.conf"
+wget -O /etc/nginx/conf.d/vps.conf "httpshttp://insomnet4u.me/aneka/aneka/vps.conf"
 sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
 cd
 
