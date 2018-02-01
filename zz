@@ -29,9 +29,6 @@ wget https://github.com/busyloop/lolcat/archive/master.zip
 unzip master.zip
 
 
-gem install lolcat
-cd
-rm -r lolcat-master
 rm master.zip
 
 # check registered ip
