@@ -21,15 +21,15 @@ fi
 
 	source="http://borneobesthosting.me/autoscript"
 
-
-# Install lolcat
-apt-get install bc -y
-apt-get install xfonts-thai* -y
+fi
 apt-get install figlet
-apt-get install ruby -y
-apt-get install unzip
+apt-get install ruby
+apt-get -y install zip unzip
+cd /home/vps/public_html
 wget https://github.com/busyloop/lolcat/archive/master.zip
-cd lolcat-master/bin
+unzip master.zip
+
+
 gem install lolcat
 cd
 rm -r lolcat-master
