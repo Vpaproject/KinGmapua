@@ -20,8 +20,7 @@ if [[ $ether = "" ]]; then
 fi
 
 	source="http://borneobesthosting.me/autoscript"
-
-fi
+# hdjjs
 apt-get install figlet
 apt-get install ruby
 apt-get -y install zip unzip
