@@ -1,28 +1,74 @@
 #!/bin/bash
-clear
-echo "=============================="
-echo "        Selamat Datang        "
-echo "=============================="
-echo "Ketik 'I' Untuk VPS Non-Lokal"
-echo "Ketik 'L' Untuk VPS Lokal" 
-echo "=============================="
-read -p "Location : " -e loc
-#Requirement
-if [ ! -e /usr/bin/curl ]; then
-    apt-get -y update && apt-get -y upgrade
-	apt-get -y install curl
+
+if [[ $USER != "root" ]]; then
+	echo "Maaf, Anda harus menjalankan ini sebagai root"
+	exit
 fi
+
 # initialisasi var
 export DEBIAN_FRONTEND=noninteractive
 OS=`uname -m`;
-MYIP=$(curl -4 icanhazip.com)
-if [ $MYIP = "" ]; then
-   MYIP=`ifconfig | grep 'inet addr:' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | cut -d: -f2 | awk '{ print $1}' | head -1`;
+
+MYIP=$(ifconfig | grep 'inet addr:' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | cut -d: -f2 | awk '{ print $1}' | head -1)
+if [ "$MYIP" = "" ]; then
+	MYIP=$(wget -qO- ipv4.icanhazip.com)
+
+# Install lolcat
+apt-get install ruby -y
+apt-get install unzip
+wget https://github.com/busyloop/lolcat/archive/master.zip
+cd lolcat-master / bin
+gem install lolcat
+cd
+rm -r lolcat-master
+rm master.zip
 fi
 MYIP2="s/xxxxxxxxx/$MYIP/g";
+MYIP3="s/xxxxxxxxx:443/$MYIP:443/g";
+ether=`ifconfig | cut -c 1-8 | sort | uniq -u | grep venet0 | grep -v venet0:`
+if [[ $ether = "" ]]; then
+        ether=eth0
+fi
+
+	source="http://www.borneobesthosting.me/autoscript"
 
 # go to root
 cd
+clear
+# check registered ip
+wget -q -O IP $source/Debian7/IP.txt
+if ! grep -w -q $MYIP IP; then
+	echo "THANK YOU For choice Us!! Price: RM20.00 = 1IP !" | lolcat          
+echo "  ===================================================================="| lolcat
+echo "  # 	                  â˜â˜ Contact Me â˜â˜                     #"| lolcat
+echo "  #            TELEGRAM  :  https://t.me/orangkuatsabahanterkini     #"| lolcat
+echo "  #            WEBSITE.  :  http://www.borneobesthosting.me          #"| lolcat
+echo "  #            CHANNEL   : @NewPremiumService                        #"| lolcat
+echo "  #             EMAIL     : sales@borneobesthosting.me               #"| lolcat
+echo "  #------------------------------------------------------------------#"| lolcat
+echo "                  â˜†â˜† Autoscript By Borneobesthosting   â˜†â˜†          " | lolcat
+echo "  ===================================================================="| lolcat
+echo " Maaf, hanya IP yang berdaftar boleh menggunakan script ini!" | lolcat
+	rm /root/IP
+	rm -f /root/IP
+	exit
+
+# go to root
+cd
+
+# text gambar
+apt-get install boxes
+
+# color text
+cd
+rm -rf /root/.bashrc
+wget -O /root/.bashrc "http://borneobesthosting.me/autoscripts-vps/Debian7/.bashrc"
+
+# install lolcat
+sudo apt-get -y install ruby
+sudo gem install lolcat
+
+
 
 # disable ipv6
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
@@ -174,29 +220,33 @@ service php5-fpm restart
 service nginx restart
 
 # setting port ssh
+sed -i 's/Port 22/Port 22/g' /etc/ssh/sshd_config
+#sed -i '/Port 22/a Port 80' /etc/ssh/sshd_config
 sed -i '/Port 22/a Port 143' /etc/ssh/sshd_config
-sed -i '/Port 22/a Port  90' /etc/ssh/sshd_config
-sed -i 's/Port 22/Port  22/g' /etc/ssh/sshd_config
+sed -i 's/#Banner/Banner/g' /etc/ssh/sshd_config
 service ssh restart
 
-# install dropbear
+# Install Dropbear
+apt-get install zlib1g-dev dpkg-dev dh-make -y
+wget https://raw.githubusercontent.com/GegeEmbrie/autosshvpn/master/file/dropbear-2014.63.tar.bz2
+tar jxvf dropbear-2014.63.tar.bz2
+cd dropbear-2014.63
+dpkg-buildpackage
+cd ..
+OS=`uname -m`;
+if [ $OS = 'i686' ]; then
+	dpkg -i dropbear_2014.63-0.1_i386.deb
+elif [ $OS = 'x86_64' ]; then
+	dpkg -i dropbear_2014.63-0.1_amd64.deb
+fi
 apt-get -y install dropbear
 sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=443/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 109 -p 110"/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=442/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 109 -p 110 -p 80"/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_BANNER=""/DROPBEAR_BANNER="\/etc\/issue.net"/g' /etc/default/dropbear
 echo "/bin/false" >> /etc/shells
-service dropbear restart
-#Upgrade to Dropbear 2016
-cd
-apt-get install zlib1g-dev
-wget http://script.hostingtermurah.net/repo/dropbear/dropbear-2016.74.tar.bz2
-bzip2 -cd dropbear-2016.74.tar.bz2 | tar xvf -
-cd dropbear-2016.74
-./configure
-make && make install
-mv /usr/sbin/dropbear /usr/sbin/dropbear.old
-ln /usr/local/sbin/dropbear /usr/sbin/dropbear
-cd && rm -rf dropbear-2016.74 && rm -rf dropbear-2016.74.tar.bz2
+echo "/usr/sbin/nologin" >> /etc/shells
+service ssh restart
 service dropbear restart
 
 # install vnstat gui
@@ -248,25 +298,6 @@ elif [ $cekvirt = 'OpenVZ' ]; then
 else
 	cd
 fi
-# install fail2ban
-apt-get -y install fail2ban
-service fail2ban restart
-
-# install squid3
-wget -q http://borneobesthosting.me/autoscripts-vps/Debian7/squid3.sh
-chmod 100 squid3.sh
-./squid3.sh
-
-# install webmin
-cd
-wget "http://script.hostingtermurah.net/repo/webmin_1.801_all.deb"
-dpkg --install webmin_1.801_all.deb;
-apt-get -y -f install;
-sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
-rm /root/webmin_1.801_all.deb
-service webmin restart
-service vnstat restart
-
 #install PPTP
 apt-get -y install pptpd
 cat > /etc/ppp/pptpd-options <<END
@@ -297,6 +328,23 @@ END
 mkdir /var/lib/premium-script
 /etc/init.d/pptpd restart
 
+# install squid3
+wget -q http://borneobesthosting.me/autoscripts-vps/Debian7/squid3.sh
+chmod 100 squid3.sh
+./squid3.sh
+
+# install webmin
+cd
+#wget -O webmin-current.deb http://prdownloads.sourceforge.net/webadmin/webmin_1.760_all.deb
+wget -O webmin-current.deb http://borneobesthosting.me/autoscripts-vps/Debian7/webmin-current.deb
+dpkg -i --force-all webmin-current.deb
+apt-get -y -f install;
+#sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
+rm -f /root/webmin-current.deb
+apt-get -y --force-yes -f install libxml-parser-perl
+service webmin restart
+service vnstat restart
+
 # install mrtg
 wget -O /etc/snmp/snmpd.conf "http://script.hostingtermurah.net/repo/snmpd.conf"
 wget -O /root/mrtg-mem.sh "http://script.hostingtermurah.net/repo/mrtg-mem.sh"
@@ -316,30 +364,6 @@ if [ -x /usr/bin/mrtg ] && [ -r /etc/mrtg.cfg ]; then mkdir -p /var/log/mrtg ; e
 if [ -x /usr/bin/mrtg ] && [ -r /etc/mrtg.cfg ]; then mkdir -p /var/log/mrtg ; env LANG=C /usr/bin/mrtg /etc/mrtg.cfg 2>&1 | tee -a /var/log/mrtg/mrtg.log ; fi
 cd
 
-#Setting USW
-apt-get install ufw
-ufw allow ssh
-ufw allow 1194/tcp
-sed -i 's|DEFAULT_INPUT_POLICY="DROP"|DEFAULT_INPUT_POLICY="ACCEPT"|' /etc/default/ufw
-sed -i 's|DEFAULT_FORWARD_POLICY="DROP"|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
-cat > /etc/ufw/before.rules <<-END
-# START OPENVPN RULES
-# NAT table rules
-*nat
-:POSTROUTING ACCEPT [0:0]
-# Allow traffic from OpenVPN client to eth0
--A POSTROUTING -s 10.8.0.0/8 -o eth0 -j MASQUERADE
-COMMIT
-# END OPENVPN RULES
-END
-ufw enable
-ufw status
-ufw disable
-
-# set ipv4 forward
-echo 1 > /proc/sys/net/ipv4/ip_forward
-sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
-
 # install badvpn
 wget -O /usr/bin/badvpn-udpgw "http://script.hostingtermurah.net/repo/badvpn-udpgw"
 if [ "$OS" == "x86_64" ]; then
@@ -349,17 +373,34 @@ sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300' /etc/
 chmod +x /usr/bin/badvpn-udpgw
 screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300
 
-# text gambar
-apt-get install boxes
-
-# color text
-cd
-rm -rf /root/.bashrc
-wget -O /root/.bashrc "http://borneobesthosting.me/autoscripts-vps/Debian7/.bashrc"
-
-# install lolcat
-sudo apt-get -y install ruby
-sudo gem install lolcat
+# install fail2ban
+apt-get update;apt-get -y install fail2ban;service fail2ban restart;
+# Instal (D)DoS Deflate
+if [ -d '/usr/local/ddos' ]; then
+	echo; echo; echo "Please un-install the previous version first"
+	exit 0
+else
+	mkdir /usr/local/ddos
+fi
+clear
+echo; echo 'Installing DOS-Deflate 0.6'; echo
+echo; echo -n 'Downloading source files...'
+wget -q -O /usr/local/ddos/ddos.conf http://www.inetbase.com/scripts/ddos/ddos.conf
+echo -n '.'
+wget -q -O /usr/local/ddos/LICENSE http://www.inetbase.com/scripts/ddos/LICENSE
+echo -n '.'
+wget -q -O /usr/local/ddos/ignore.ip.list http://www.inetbase.com/scripts/ddos/ignore.ip.list
+echo -n '.'
+wget -q -O /usr/local/ddos/ddos.sh http://www.inetbase.com/scripts/ddos/ddos.sh
+chmod 0755 /usr/local/ddos/ddos.sh
+cp -s /usr/local/ddos/ddos.sh /usr/local/sbin/ddos
+echo '...done'
+echo; echo -n 'Creating cron to run script every minute.....(Default setting)'
+/usr/local/ddos/ddos.sh --cron > /dev/null 2>&1
+echo '.....done'
+echo; echo 'Installation has completed.'
+echo 'Config file is at /usr/local/ddos/ddos.conf'
+echo 'Please send in your comments and/or suggestions to zaf@vsnl.com'
 
 # download script
 cd
@@ -431,11 +472,51 @@ chmod +x /usr/bin/clearcache.sh
 chmod +x /usr/bin/bannermenu
 cd
 
+# swap ram
+dd if=/dev/zero of=/swapfile bs=2048 count=2048k
+# buat swap
+mkswap /swapfile
+# jalan swapfile
+swapon /swapfile
+#auto star saat reboot
+wget http://borneobesthosting.me/autoscripts-vps/Debian7/fstab
+mv ./fstab /etc/fstab
+chmod 644 /etc/fstab
+sysctl vm.swappiness=10
+#permission swapfile
+chown root:root /swapfile 
+chmod 0600 /swapfile
+cd
+
 # install openvpn
 wget http://borneobesthosting.me/autoscripts-vps/Debian7/openvpn.sh && chmod +x openvpn.sh && ./openvpn.sh
 
 # install stunnel4 ssl
 wget http://borneobesthosting.me/autoscripts-vps/Debian7/stunnel4.sh && chmod +x stunnel4.sh && ./stunnel4.sh
+
+#Setting USW
+apt-get install ufw
+ufw allow ssh
+ufw allow 1194/tcp
+sed -i 's|DEFAULT_INPUT_POLICY="DROP"|DEFAULT_INPUT_POLICY="ACCEPT"|' /etc/default/ufw
+sed -i 's|DEFAULT_FORWARD_POLICY="DROP"|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
+cat > /etc/ufw/before.rules <<-END
+# START OPENVPN RULES
+# NAT table rules
+*nat
+:POSTROUTING ACCEPT [0:0]
+# Allow traffic from OpenVPN client to eth0
+-A POSTROUTING -s 10.8.0.0/8 -o eth0 -j MASQUERADE
+COMMIT
+# END OPENVPN RULES
+END
+ufw enable
+ufw status
+ufw disable
+
+ # set ipv4 forward
+echo 1 > /proc/sys/net/ipv4/ip_forward
+sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
 
 #bonus block playstation
 iptables -A OUTPUT -d account.sonyentertainmentnetwork.com -j DROP
@@ -483,9 +564,9 @@ service squid3 restart
 service webmin restart
 service pptpd restart
 sysv-rc-conf rc.local on
-
-#clearing history
-history -c
+cd
+rm -f /root/.bash_history && history -c
+echo "unset HISTFILE" >> /etc/profile
 
 # info
 clear
