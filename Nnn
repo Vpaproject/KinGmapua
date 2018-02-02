@@ -13,61 +13,9 @@ MYIP=$(ifconfig | grep 'inet addr:' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\
 if [ "$MYIP" = "" ]; then
 	MYIP=$(wget -qO- ipv4.icanhazip.com)
 fi
-MYIP2="s/xxxxxxxxx/$MYIP/g";
-MYIP3="s/xxxxxxxxx:443/$MYIP:443/g";
-ether=`ifconfig | cut -c 1-8 | sort | uniq -u | grep venet0 | grep -v venet0:`
-if [[ $ether = "" ]]; then
-        ether=eth0
-fi
-
-	source="http://borneobesthosting.me/autoscripts-vps/Debian7"
-
 # go to root
 cd
 
-# check registered ip
-wget -q -O IP $source/debian7/IP.txt
-if ! grep -w -q $MYIP IP; then
-	echo "Maaf, hanya IP yang terdaftar yang bisa menggunakan script ini!"
-        echo "     
-                       
-echo -e "\e[38;5;82m=============== OS-32  \e[38;5;198m& 64-bit ================" 
-echo -e "\e[38;5;82m♦                        \e[38;5;198m                      ♦"                                     
-echo -e "\e[38;5;82m♦    AUTOSCRIPT CREATED \e[38;5;198mBY ROSMAH MANSOR       ♦"                
-echo -e "\e[38;5;82m♦                     & \e[38;5;198m                       ♦"	                                    
-echo -e "\e[38;5;82m♦                - BLAN \e[38;5;198mGKON -                 ♦"	             
-echo -e "\e[38;5;82m♦       -----------About  \e[38;5;198mUs------------       ♦"                
-echo -e "\e[38;5;82m♦            Tel : +60109 \e[38;5;198m475453               ♦"               
-echo -e "\e[38;5;82m♦         { Sms/whatsapp \e[38;5;198m/telegram }           ♦"                
-echo -e "\e[38;5;82m♦       http://t.me/orangkuatsa \e[38;5;198mbahanterkini   ♦"                  
-echo -e "\e[38;5;82m=============== OS-32  \e[38;5;198m& 64-bit ================"
-echo -e "\e[38;5;198m      Please make payment before use auto script"               
-echo -e "\e[38;5;198m      .........................................."                 
-echo -e "\e[38;5;82m              Thank You For Choice Us"                
-	rm /root/IP
-	rm -f /root/IP
-	exit
-fi
-
-# go home
-cd
- red='\e[1;31m'
-               green='\e[0;32m'
-               NC='\e[0m'
-
-               echo -e "\e[38;5;82m Connecting to Autoscript OrangKuatsab..."
-			   sleep 1
-
-			   echo -e "\e[38;5;11m Connecting to your ip ▒▒▒▒: $myip ...."
-               sleep 2
-                          echo -e "\e[38;5;13m Proses ini akan mengambil masa 10-15 minit.."
-		sleep 2.5	  
-			   echo -e "\e[38;5;226m IP ANDA Berjaya Di Daftarkan..."
-               sleep 1.5
-               
-			   echo -e "${green}Mula Setup..${NC}"
-               sleep 1
-	       cd
 # disable ipv6
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
 sed -i '$ i\echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6' /etc/rc.local
