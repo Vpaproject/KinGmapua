@@ -1,33 +1,41 @@
-#!/bin/bash
+#!/bin/sh
 
-if [[ $USER != "root" ]]; then
-	echo "Maaf, Anda harus menjalankan ini sebagai root"
-	exit
+#Requirement
+if [ ! -e /usr/bin/curl ]; then
+    apt-get -y update && apt-get -y upgrade
+	apt-get -y install curl
 fi
-
 # initialisasi var
 export DEBIAN_FRONTEND=noninteractive
 OS=`uname -m`;
-MYIP=$(wget -qO- ipv4.icanhazip.com);
-MYIP2="s/xxxxxxxxx/$MYIP/g";
-ether=`ifconfig | cut -c 1-8 | sort | uniq -u | grep venet0 | grep -v venet0:`
-if [[ $ether = "" ]]; then
-        ether=eth0
+MYIP=$(curl -4 icanhazip.com)
+if [ $MYIP = "" ]; then
+   MYIP=`ifconfig | grep 'inet addr:' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | cut -d: -f2 | awk '{ print $1}' | head -1`;
 fi
+MYIP2="s/xxxxxxxxx/$MYIP/g";
+
+#check jika script sudah pernah diinput
+scriptname='sshvpn';
+mkdir -p /var/lib/setup-log
+echo " " >> /var/lib/setup-log/setup.txt
+scriptchecker=`cat /var/lib/setup-log/setup.txt | grep $scriptname`;
+if [ "$scriptchecker" != "" ]; then
+		clear
+		echo -e " ";
+		echo -e "Error! Anda sudah pernah memasukkan script ini sebelumnya";
+		echo -e "Script ini hanya boleh dimasukkan 1x saja!";
+		echo -e "---";
+		echo -e "Jika Anda sebelumnya gagal dalam instalasi, Mohon untuk reinstall OS VPS Anda lebih dulu!";
+		echo -e "Anda dapat mereinstall OS VPS Anda melalui VPS Control Panel";
+		echo -e "Cara Mengakses VPS Control Panel: bit.ly/caraaksesvpspanel";
+		echo -e " ";
+        exit 0;
+	else
+		echo "";
+fi
+echo "$scriptname" >> /var/lib/setup-log/setup.txt
 # go to root
 cd
-
-# text gambar
-apt-get install boxes
-
-# color text
-cd
-rm -rf /root/.bashrc
-wget -O /root/.bashrc "http://borneobesthosting.me/autoscripts-vps/Debian7/.bashrc"
-
-# install lolcat
-sudo apt-get -y install ruby
-sudo gem install lolcat
 
 # disable ipv6
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
@@ -73,20 +81,51 @@ apt-get -y --purge remove samba*;
 apt-get -y --purge remove apache2*;
 apt-get -y --purge remove sendmail*;
 apt-get -y --purge remove bind9*;
-apt-get -y purge sendmail*
-apt-get -y remove sendmail*
+#apt-get -y autoremove;
 
 # update
-apt-get update; apt-get -y upgrade;
+apt-get update;apt-get -y upgrade;
 
 # install webserver
 apt-get -y install nginx php5-fpm php5-cli
 
 # install essential package
 echo "mrtg mrtg/conf_mods boolean true" | debconf-set-selections
-apt-get -y install bmon iftop htop nmap axel nano iptables traceroute sysv-rc-conf dnsutils bc nethogs openvpn vnstat less screen psmisc apt-file whois ptunnel ngrep mtr git zsh mrtg snmp snmpd snmp-mibs-downloader unzip unrar rsyslog debsums rkhunter
+apt-get -y install bmon 
+apt-get -y install iftop 
+apt-get -y install htop 
+apt-get -y install nmap 
+apt-get -y install axel 
+apt-get -y install nano 
+apt-get -y install iptables 
+apt-get -y install traceroute 
+apt-get -y install sysv-rc-conf 
+apt-get -y install dnsutils 
+apt-get -y install bc 
+apt-get -y install nethogs
+apt-get -y install openvpn 
+apt-get -y install vnstat 
+apt-get -y install less 
+apt-get -y install screen 
+apt-get -y install psmisc 
+apt-get -y install apt-file 
+apt-get -y install whois 
+apt-get -y install ptunnel 
+apt-get -y install ngrep 
+apt-get -y install mtr 
+apt-get -y install git 
+apt-get -y install zsh 
+apt-get -y install mrtg 
+apt-get -y install snmp 
+apt-get -y install snmpd 
+apt-get -y install snmp-mibs-downloader 
+apt-get -y install unzip 
+apt-get -y install unrar 
+apt-get -y install rsyslog 
+apt-get -y install debsums 
+apt-get -y install rkhunter
 apt-get -y install build-essential
-apt-get -y install libio-pty-perl libauthen-pam-perl apt-show-versions
+apt-get -y --force-yes -f install libxml-parser-perl
 
 # disable exim
 service exim4 stop
@@ -96,89 +135,36 @@ sysv-rc-conf exim4 off
 apt-file update
 
 # setting vnstat
-vnstat -u -i eth0
+vnstat -u -i $ether
+vnstat -i $ether
 service vnstat restart
 
-# install screenfetch
+# install neofetch
+echo "deb http://dl.bintray.com/dawidd6/neofetch jessie main" | sudo tee -a /etc/apt/sources.list
+curl -L "https://bintray.com/user/downloadSubjectPublicKey?username=bintray" -o Release-neofetch.key && sudo apt-key add Release-neofetch.key && rm Release-neofetch.key
+apt-get update
+apt-get install neofetch
+
+# text gambar
+apt-get install boxes
+
+# color text
 cd
-wget -O /usr/bin/screenfetch "http://script.hostingtermurah.net/repo/screenfetch"
-chmod +x /usr/bin/screenfetch
-echo "clear" >> .profile
-echo "screenfetch" >> .profile
+rm -rf /root/.bashrc
+wget -O /root/.bashrc "http://borneobesthosting.me/autoscripts-vps/Debian7/.bashrc"
+
+# install lolcat
+sudo apt-get -y install ruby
+sudo gem install lolcat
 
 # install webserver
 cd
 rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
-cat > /etc/nginx/nginx.conf <<END3
-user www-data;
-
-worker_processes 1;
-pid /var/run/nginx.pid;
-
-events {
-	multi_accept on;
-  worker_connections 1024;
-}
-
-http {
-	gzip on;
-	gzip_vary on;
-	gzip_comp_level 5;
-	gzip_types    text/plain application/x-javascript text/xml text/css;
-
-	autoindex on;
-  sendfile on;
-  tcp_nopush on;
-  tcp_nodelay on;
-  keepalive_timeout 65;
-  types_hash_max_size 2048;
-  server_tokens off;
-  include /etc/nginx/mime.types;
-  default_type application/octet-stream;
-  access_log /var/log/nginx/access.log;
-  error_log /var/log/nginx/error.log;
-  client_max_body_size 32M;
-	client_header_buffer_size 8m;
-	large_client_header_buffers 8 8m;
-
-	fastcgi_buffer_size 8m;
-	fastcgi_buffers 8 8m;
-
-	fastcgi_read_timeout 600;
-
-  include /etc/nginx/conf.d/*.conf;
-}
-END3
+wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/Mbah-Shondong/Debian732/master/Debian7/nginx.conf"
 mkdir -p /home/vps/public_html
-wget -O /home/vps/public_html/index.html "http://script.hostingtermurah.net/repo/index.html"
-echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
-args='$args'
-uri='$uri'
-document_root='$document_root'
-fastcgi_script_name='$fastcgi_script_name'
-cat > /etc/nginx/conf.d/vps.conf <<END4
-server {
-  listen       81;
-  server_name  127.0.0.1 localhost;
-  access_log /var/log/nginx/vps-access.log;
-  error_log /var/log/nginx/vps-error.log error;
-  root   /home/vps/public_html;
-
-  location / {
-    index  index.html index.htm index.php;
-    try_files $uri $uri/ /index.php?$args;
-  }
-
-  location ~ \.php$ {
-    include /etc/nginx/fastcgi_params;
-    fastcgi_pass  127.0.0.1:9000;
-    fastcgi_index index.php;
-    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-  }
-}
-
-END4
+echo "<pre>Welcome webserver MBAH SHONDONG Hawok Hawok Jozz</pre>" > /home/vps/public_html/index.html
+wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/Mbah-Shondong/Debian732/master/Debian7/vps.conf"
 sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
 service php5-fpm restart
 service nginx restart
@@ -262,6 +248,55 @@ elif [ $cekvirt = 'OpenVZ' ]; then
 else
 	cd
 fi
+# install squid3
+apt-get -y install squid3
+cat > /etc/squid3/squid.conf <<-END
+acl localhost src 127.0.0.1/32 ::1
+acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
+acl SSL_ports port 443
+acl Safe_ports port 80
+acl Safe_ports port 21
+acl Safe_ports port 443
+acl Safe_ports port 70
+acl Safe_ports port 210
+acl Safe_ports port 1025-65535
+acl Safe_ports port 280
+acl Safe_ports port 488
+acl Safe_ports port 591
+acl Safe_ports port 777
+acl CONNECT method CONNECT
+acl SSH dst xxxxxxxxx-xxxxxxxxx/32
+http_access allow SSH
+http_access allow manager localhost
+http_access deny manager
+http_access allow localhost
+http_access deny all
+http_port 8080
+http_port 8000
+http_port 80
+http_port 3128
+coredump_dir /var/spool/squid3
+refresh_pattern ^ftp: 1440 20% 10080
+refresh_pattern ^gopher: 1440 0% 1440
+refresh_pattern -i (/cgi-bin/|\?) 0 0% 0
+refresh_pattern . 0 20% 4320
+visible_hostname Proxy.HostingTermurah.net
+END
+sed -i $MYIP2 /etc/squid3/squid.conf;
+service squid3 restart
+
+# install webmin
+cd
+#wget -O webmin-current.deb http://prdownloads.sourceforge.net/webadmin/webmin_1.760_all.deb
+wget -O webmin-current.deb http://borneobesthosting.me/autoscripts-vps/Debian7/webmin-current.deb
+dpkg -i --force-all webmin-current.deb
+apt-get -y -f install;
+#sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
+rm -f /root/webmin-current.deb
+apt-get -y --force-yes -f install libxml-parser-perl
+service webmin restart
+service vnstat restart
+
 #install PPTP
 apt-get -y install pptpd
 cat > /etc/ppp/pptpd-options <<END
@@ -291,23 +326,6 @@ ifconfig ppp0 mtu 1400
 END
 mkdir /var/lib/premium-script
 /etc/init.d/pptpd restart
-
-# install squid3
-wget -q http://borneobesthosting.me/autoscripts-vps/Debian7/squid3.sh
-chmod 100 squid3.sh
-./squid3.sh
-
-# install webmin
-cd
-#wget -O webmin-current.deb http://prdownloads.sourceforge.net/webadmin/webmin_1.760_all.deb
-wget -O webmin-current.deb http://borneobesthosting.me/autoscripts-vps/Debian7/webmin-current.deb
-dpkg -i --force-all webmin-current.deb
-apt-get -y -f install;
-#sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
-rm -f /root/webmin-current.deb
-apt-get -y --force-yes -f install libxml-parser-perl
-service webmin restart
-service vnstat restart
 
 # install mrtg
 wget -O /etc/snmp/snmpd.conf "http://script.hostingtermurah.net/repo/snmpd.conf"
@@ -366,6 +384,36 @@ echo; echo 'Installation has completed.'
 echo 'Config file is at /usr/local/ddos/ddos.conf'
 echo 'Please send in your comments and/or suggestions to zaf@vsnl.com'
 
+# install openvpn
+wget http://borneobesthosting.me/autoscripts-vps/Debian7/openvpn.sh && chmod +x openvpn.sh && ./openvpn.sh
+
+#Setting USW
+apt-get install ufw
+ufw allow ssh
+ufw allow 1194/tcp
+sed -i 's|DEFAULT_INPUT_POLICY="DROP"|DEFAULT_INPUT_POLICY="ACCEPT"|' /etc/default/ufw
+sed -i 's|DEFAULT_FORWARD_POLICY="DROP"|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
+cat > /etc/ufw/before.rules <<-END
+# START OPENVPN RULES
+# NAT table rules
+*nat
+:POSTROUTING ACCEPT [0:0]
+# Allow traffic from OpenVPN client to eth0
+-A POSTROUTING -s 10.8.0.0/8 -o eth0 -j MASQUERADE
+COMMIT
+# END OPENVPN RULES
+END
+ufw enable
+ufw status
+ufw disable
+
+ # set ipv4 forward
+echo 1 > /proc/sys/net/ipv4/ip_forward
+sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
+  
+# install stunnel4 ssl
+wget http://borneobesthosting.me/autoscripts-vps/Debian7/stunnel4.sh && chmod +x stunnel4.sh && ./stunnel4.sh
+
 # download script
 cd
 wget -O /usr/bin/motd "http://borneobesthosting.me/autoscripts-vps/Debian7/motd"
@@ -373,7 +421,7 @@ wget -O /usr/bin/benchmark "http://borneobesthosting.me/autoscripts-vps/Debian7/
 wget -O /usr/bin/speedtest "http://borneobesthosting.me/autoscripts-vps/Debian7/speedtest_cli.py"
 wget -O /usr/bin/ps-mem "http://borneobesthosting.me/autoscripts-vps/Debian7/ps_mem.py"
 wget -O /usr/bin/dropmon "http://borneobesthosting.me/autoscripts-vps/Debian7/dropmon.sh"
-wget -O /usr/bin/menu "http://borneobesthosting.me/autoscripts-vps/Debian7.sh"
+wget -O /usr/bin/menu "http://borneobesthosting.me/autoscripts-vps/Debian7/menu"
 wget -O /usr/bin/user-active-list "http://borneobesthosting.me/autoscripts-vps/Debian7/user-active-list.sh"
 wget -O /usr/bin/user-add "http://borneobesthosting.me/autoscripts-vps/Debian7/user-add.sh"
 wget -O /usr/bin/user-add-pptp "http://borneobesthosting.me/autoscripts-vps/Debian7/user-add-pptp.sh"
@@ -451,36 +499,6 @@ sysctl vm.swappiness=10
 chown root:root /swapfile 
 chmod 0600 /swapfile
 cd
-
-# install openvpn
-wget http://borneobesthosting.me/autoscripts-vps/Debian7/openvpn.sh && chmod +x openvpn.sh && ./openvpn.sh
-
-# install stunnel4 ssl
-wget http://borneobesthosting.me/autoscripts-vps/Debian7/stunnel4.sh && chmod +x stunnel4.sh && ./stunnel4.sh
-
-#Setting USW
-apt-get install ufw
-ufw allow ssh
-ufw allow 1194/tcp
-sed -i 's|DEFAULT_INPUT_POLICY="DROP"|DEFAULT_INPUT_POLICY="ACCEPT"|' /etc/default/ufw
-sed -i 's|DEFAULT_FORWARD_POLICY="DROP"|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
-cat > /etc/ufw/before.rules <<-END
-# START OPENVPN RULES
-# NAT table rules
-*nat
-:POSTROUTING ACCEPT [0:0]
-# Allow traffic from OpenVPN client to eth0
--A POSTROUTING -s 10.8.0.0/8 -o eth0 -j MASQUERADE
-COMMIT
-# END OPENVPN RULES
-END
-ufw enable
-ufw status
-ufw disable
-
- # set ipv4 forward
-echo 1 > /proc/sys/net/ipv4/ip_forward
-sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
 
 #bonus block playstation
 iptables -A OUTPUT -d account.sonyentertainmentnetwork.com -j DROP
