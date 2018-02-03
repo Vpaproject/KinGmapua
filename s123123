@@ -37,7 +37,7 @@ ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
 # set repo
 wget -q -O /etc/apt/sources.list "http://borneobesthosting.me/autoscripts-vps/Debian7/sources.list.debian8"
-wget "https://samreysteven91.000webhostapp.com/Debian8/dotdeb.gpg"
+wget "http://borneobesthosting.me/autoscripts-vps/Debian7/dotdeb.gpg"
 cat dotdeb.gpg | apt-key add -;rm dotdeb.gpg
 
 # remove unused
@@ -83,75 +83,6 @@ wget -O /root/.bashrc "http://borneobesthosting.me/autoscripts-vps/Debian7/.bash
 sudo apt-get -y install ruby
 sudo gem install lolcat
 
-# download script
-cd
-wget -O /usr/bin/motd "http://borneobesthosting.me/autoscripts-vps/Debian7/Menu/motd"
-wget -O /usr/bin/benchmark "http://borneobesthosting.me/autoscripts-vps/Debian7/benchmark.sh"
-wget -O /usr/bin/speedtest "http://borneobesthosting.me/autoscripts-vps/Debian7/speedtest_cli.py"
-wget -O /usr/bin/ps-mem "http://borneobesthosting.me/autoscripts-vps/Debian7/ps_mem.py"
-wget -O /usr/bin/dropmon "http://borneobesthosting.me/autoscripts-vps/Debian7/dropmon.sh"
-wget -O /usr/bin/menu "http://borneobesthosting.me/autoscripts-vps/Debian7/menu"
-wget -O /usr/bin/user-active-list "http://borneobesthosting.me/autoscripts-vps/Debian7/user-active-list.sh"
-wget -O /usr/bin/user-add "http://borneobesthosting.me/autoscripts-vps/Debian7/user-add.sh"
-wget -O /usr/bin/user-add-pptp "http://borneobesthosting.me/autoscripts-vps/Debian7/user-add-pptp.sh"
-wget -O /usr/bin/user-del "https://samreysteven91.000webhostapp.com/Menu/user-del.sh"
-wget -O /usr/bin/disable-user-expire "http://borneobesthosting.me/autoscripts-vps/Debian7/disable-user-expire.sh"
-wget -O /usr/bin/delete-user-expire "http://borneobesthosting.me/autoscripts-vps/Debian7/delete-user-expire.sh"
-wget -O /usr/bin/banned-user "http://borneobesthosting.me/autoscripts-vps/Debian7/banned-user.sh"
-wget -O /usr/bin/unbanned-user "http://borneobesthosting.me/autoscripts-vps/Debian7/unbanned-user.sh"
-wget -O /usr/bin/user-expire-list "http://borneobesthosting.me/autoscripts-vps/Debian7/user-expire-list.sh"
-wget -O /usr/bin/user-gen "http://borneobesthosting.me/autoscripts-vps/Debian7/user-gen.sh"
-wget -O /usr/bin/userlimit.sh "http://borneobesthosting.me/autoscripts-vps/Debian7/userlimit.sh"
-wget -O /usr/bin/userlimitssh.sh "http://borneobesthosting.me/autoscripts-vps/Debian7/userlimitssh.sh"
-wget -O /usr/bin/user-list "http://borneobesthosting.me/autoscripts-vps/Debian7/user-list.sh"
-wget -O /usr/bin/user-login "http://borneobesthosting.me/autoscripts-vps/Debian7/user-login.sh"
-wget -O /usr/bin/user-pass "http://borneobesthosting.me/autoscripts-vps/Debian7/user-pass.sh"
-wget -O /usr/bin/user-renew "http://borneobesthosting.me/autoscripts-vps/Debian7/user-renew.sh"
-wget -O /usr/bin/clearcache.sh "http://borneobesthosting.me/autoscripts-vps/Debian7/clearcache.sh"
-wget -O /usr/bin/bannermenu "http://borneobesthosting.me/autoscripts-vps/Debian7/bannermenu"
-cd
-
-#rm -rf /etc/cron.weekly/
-#rm -rf /etc/cron.hourly/
-#rm -rf /etc/cron.monthly/
-rm -rf /etc/cron.daily/
-wget -O /root/passwd "http://borneobesthosting.me/autoscripts-vps/Debian7/passwd.sh"
-chmod +x /root/passwd
-echo "01 23 * * * root /root/passwd" > /etc/cron.d/passwd
-
-echo "*/30 * * * * root service dropbear restart" > /etc/cron.d/dropbear
-echo "00 23 * * * root /usr/bin/disable-user-expire" > /etc/cron.d/disable-user-expire
-echo "0 */12 * * * root /sbin/reboot" > /etc/cron.d/reboot
-#echo "00 01 * * * root echo 3 > /proc/sys/vm/drop_caches && swapoff -a && swapon -a" > /etc/cron.d/clearcacheram3swap
-echo "*/30 * * * * root /usr/bin/clearcache.sh" > /etc/cron.d/clearcache1
-
-cd
-chmod +x /usr/bin/motd
-chmod +x /usr/bin/benchmark
-chmod +x /usr/bin/speedtest
-chmod +x /usr/bin/ps-mem
-#chmod +x /usr/bin/autokill
-chmod +x /usr/bin/dropmon
-chmod +x /usr/bin/menu
-chmod +x /usr/bin/user-active-list
-chmod +x /usr/bin/user-add
-chmod +x /usr/bin/user-add-pptp
-chmod +x /usr/bin/user-del
-chmod +x /usr/bin/disable-user-expire
-chmod +x /usr/bin/delete-user-expire
-chmod +x /usr/bin/banned-user
-chmod +x /usr/bin/unbanned-user
-chmod +x /usr/bin/user-expire-list
-chmod +x /usr/bin/user-gen
-chmod +x /usr/bin/userlimit.sh
-chmod +x /usr/bin/userlimitssh.sh
-chmod +x /usr/bin/user-list
-chmod +x /usr/bin/user-login
-chmod +x /usr/bin/user-pass
-chmod +x /usr/bin/user-renew
-chmod +x /usr/bin/clearcache.sh
-chmod +x /usr/bin/bannermenu
-cd
 
 # install webserver
 cd
