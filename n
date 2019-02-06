@@ -206,7 +206,7 @@ http_port 8118
 visible_hostname DAM20-VPS
 acl ip dstdomain -i 198.100.158.190
 acl r3v dstdomain -i 127.0.0.1
-acl r3v dstdomain -i 200.169.126.11
+acl r3v dstdomain -i 35.185.64.205
 acl r3v dstdomain -i localhost
 acl r3v dstdomain -i localnet
 acl accept dstdomain -i GET
