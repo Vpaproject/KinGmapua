@@ -123,7 +123,7 @@ echo "/usr/sbin/nologin" >> /etc/shells
 # Install Squid
 apt-get -y install squid3
 cp /etc/squid3/squid.conf /etc/squid3/squid.conf.orig
-wget -q -O /etc/squid3/squid.conf "https://raw.githubusercontent.com/dathai/thaivpn.win/master/api/squid.conf" 
+wget -q -O /etc/squid3/squid.conf "https://raw.githubusercontent.com/Vpaproject/y/debian7/squid3.conf" 
 MYIP=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | grep -v '192.168'`;
 sed -i s/xxxxxxxxx/$MYIP/g /etc/squid3/squid.conf;
 service squid3 restart
@@ -138,6 +138,20 @@ echo "<pre>Setup by Dragon96 | telegram @ranger_9699 | whatsapp +60162327524</pr
 echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
 wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/Vpaproject/y/debian7/vps.conf"
 sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
+cd
+
+# install vnstat gui
+cd /home/vps/public_html/
+wget https://github.com/Vpaproject/y/blob/debian7/vnstat_php_frontend-1.5.1.tar.gz
+tar xvfz vnstat_php_frontend-1.5.1.tar.gz
+rm vnstat_php_frontend-1.5.1.tar.gz
+mv vnstat_php_frontend-1.5.1 vnstat
+cd vnstat
+sed -i "s/eth0/$ether/g" config.php
+sed -i "s/\$iface_list = array('venet0', 'sixxs');/\$iface_list = array($ether);/g" config.php
+sed -i "s/\$language = 'nl';/\$language = 'en';/g" config.php
+sed -i 's/Internal/Internet/g' config.php
+sed -i '/SixXS IPv6/d' config.php
 cd
 
 # openvpn
