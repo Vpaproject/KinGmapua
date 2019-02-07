@@ -120,37 +120,67 @@ wget -O /etc/default/dropbear "https://raw.githubusercontent.com/guardeumvpn/Qwe
 echo "/bin/false" >> /etc/shells
 echo "/usr/sbin/nologin" >> /etc/shells
 
-# squid3
+# install squid3
 apt-get -y install squid3
-wget -O /etc/squid3/squid.conf "https://raw.githubusercontent.com/sktaka/uldgwebmin/master/script/squid.conf"
-wget -O /etc/squid/squid.conf "https://raw.githubusercontent.com/sktaka/uldgwebmin/master/script/squid.conf"
-sed -i "s/ipserver/$myip/g" /etc/squid3/squid.conf
-sed -i "s/ipserver/$myip/g" /etc/squid/squid.conf
+cat > /etc/squid3/squid.conf <<-END
+acl localhost src 127.0.0.1/32 ::1
+acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 ::1
+acl SSL_ports port 443
+acl Safe_ports port 80
+acl Safe_ports port 21
+acl Safe_ports port 443
+acl Safe_ports port 70
+acl Safe_ports port 210
+acl Safe_ports port 1025-65535
+acl Safe_ports port 280
+acl Safe_ports port 488
+acl Safe_ports port 591
+acl Safe_ports port 777
+acl CONNECT method CONNECT
+acl SSH dst xxxxxxxxx-xxxxxxxxx/32
+http_access allow SSH
+http_access allow manager localhost
+http_access deny manager
+http_access allow localhost
+http_access deny all
+http_port 8080
+http_port 8000
+http_port 80
+http_port 3128
+coredump_dir /var/spool/squid3
+refresh_pattern ^ftp: 1440 20% 10080
+refresh_pattern ^gopher: 1440 0% 1440
+refresh_pattern -i (/cgi-bin/|\?) 0 0% 0
+refresh_pattern . 0 20% 4320
+visible_hostname Proxy.HostingTermurah.net
+END
+sed -i $MYIP2 /etc/squid3/squid.conf;
+service squid3 restart
 
-
-# nginx
-apt-get -y install nginx php-fpm php-mcrypt php-cli libexpat1-dev libxml-parser-perl
+# install webserver
+cd
 rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
-wget -O /etc/php/7.0/fpm/pool.d/www.conf "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/www.conf"
-mkdir -p /home/vps/public_html
-echo "<pre>Setup By DISASTERMASTER → Call, Whatsapp, Telegram : @guardeumvpn </pre>" > /home/vps/public_html/index.php
-echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
-wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/vps.conf"
-sed -i 's/listen = \/var\/run\/php7.0-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php/7.0/fpm/pool.d/www.conf
+wget -q -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/buchook/00web8/master/nginx.conf"
+echo "<pre>Default Webpage</pre><br/><pre>Auto Installer Script Premium - ForNesia Community</pre>" > /home/fns/public_html/index.html
+echo "<?php phpinfo(); ?>" > /home/fns/public_html/info.php
+wget -q -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/buchook/00web8/master/vps.conf"
+sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
+service php5-fpm restart
+service nginx restart
 
 # openvpn
 apt-get -y install openvpn
 cd /etc/openvpn/
 wget https://github.com/MuluuJelekk/Muluu/blob/master/openvpn.tar;tar xf openvpn.tar;rm openvpn.tar
-wget -O /etc/iptables.up.rules "https://raw.githubusercontent.com/MuLuu09/conf/master/iptables.up.rules"
+wget -O /etc/iptables.up.rules "https://raw.githubusercontent.com/buchook/00web8/master/iptables.up.rules"
 sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
 sed -i "s/ipserver/$myip/g" /etc/iptables.up.rules
 iptables-restore < /etc/iptables.up.rules
 # etc
-wget -O /home/vps/public_html/client.ovpn "https://raw.githubusercontent.com/hajimxmiku/debian/master/1194-client.ovpn"
+wget -O /home/vps/public_html/client.ovpn "https://raw.githubusercontent.com/buchook/00web8/master/client.ovpn"
 sed -i "s/ipserver/$myip/g" /home/vps/public_html/client.ovpn
-cd;wget https://raw.githubusercontent.com/hajimxmiku/debian/master/cronjob.tar
+cd;wget https://raw.githubusercontent.com/buchook/00web8/master/cronjob.tar
 tar xf cronjob.tar;mv uptime.php /home/vps/public_html/
 mv usertol userssh uservpn /usr/bin/;mv cronvpn cronssh /etc/cron.d/
 chmod +x /usr/bin/usertol;chmod +x /usr/bin/userssh;chmod +x /usr/bin/uservpn;
@@ -165,7 +195,7 @@ service ssh restart
 service openvpn restart
 service dropbear restart
 service nginx restart
-service php7.0-fpm restart
+service php5-fpm restart
 service webmin restart
 service squid3 restart
 service squid restart
