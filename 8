@@ -203,7 +203,11 @@ cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
 sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
 /etc/init.d/stunnel4 restart
 
-
+# install squid3
+wget  -O /bin/sq3 -o /dev/null https://raw.githubusercontent.com/redeviver/ovpn/master/sq3
+chmod +x /bin/sq3
+sleep 1
+sq3
 
 cd
 # restart service
