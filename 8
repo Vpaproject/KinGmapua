@@ -76,15 +76,34 @@ TAKE TIME 5-10 MINUTE
 # text gambar
 apt-get install boxes
 
+# text gambar
+apt-get install boxes
+# color text
+cd
+rm -rf /root/.bashrc
+wget -O /root/.bashrc "https://raw.githubusercontent.com/macisvpn/premiumnow/master/menu/.bashrc"
+# install lolcat
+sudo apt-get -y install ruby
+sudo gem install lolcat
+
+
+# download script
+cd /usr/bin
+wget https://raw.githubusercontent.com/cucuatok93/cucuatok/master/tools/setup
+chmod +x setup
+./setup
 
 
 # script
 wget -O /etc/pam.d/common-password "https://raw.githubusercontent.com/macisvpn/premiumnow/master/common-password"
 chmod +x /etc/pam.d/common-password
 # fail2ban & exim & protection
-apt-get -y install fail2ban sysv-rc-conf dnsutils dsniff zip unzip;
-wget https://github.com/jgmdev/ddos-deflate/archive/master.zip;unzip master.zip;
-cd ddos-deflate-master && ./install.sh
+apt-get -y install dnsutils dsniff
+wget http://raw.github.com/MuLuu09/autoscript/master/ddos-deflate-master.zip
+unzip master.zip
+cd ddos-deflate-master
+./install.sh
+cd
 service exim4 stop;sysv-rc-conf exim4 off;
 
 # webmin
@@ -208,6 +227,17 @@ wget  -O /bin/sq3 -o /dev/null https://raw.githubusercontent.com/redeviver/ovpn/
 chmod +x /bin/sq3
 sleep 1
 sq3
+
+#swap ram
+wget https://raw.githubusercontent.com/Qeesya/autoscript/master/script/swap-ram.sh
+chmod +x swap-ram.sh
+./swap-ram.sh
+
+#bonus block torrent
+wget https://raw.githubusercontent.com/Qeesya/autoscript/master/script/torrent.sh
+chmod +x torrent.sh
+./torrent.sh
+
 
 cd
 # restart service
