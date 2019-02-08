@@ -160,27 +160,6 @@ INSTALLER PROCESS PLEASE WAIT
 
 TAKE TIME 5-10 MINUTE 
 "
-# script
-wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/menu"
-wget -O /usr/local/bin/autokill "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/autokill"
-wget -O /usr/local/bin/user-generate "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/user-generate"
-wget -O /usr/local/bin/speedtest "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/speedtest"
-wget -O /usr/local/bin/user-lock "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/user-lock"
-wget -O /usr/local/bin/user-unlock "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/user-unlock"
-wget -O /usr/local/bin/auto-reboot "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/auto-reboot"
-wget -O /usr/local/bin/user-password "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/user-password"
-wget -O /usr/local/bin/trial "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/trial"
-wget -O /etc/pam.d/common-password "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/common-password"
-chmod +x /etc/pam.d/common-password
-chmod +x /usr/local/bin/menu 
-chmod +x /usr/local/bin/autokill 
-chmod +x /usr/local/bin/user-generate 
-chmod +x /usr/local/bin/speedtest 
-chmod +x /usr/local/bin/user-unlock
-chmod +x /usr/local/bin/user-lock
-chmod +x /usr/local/bin/auto-reboot
-chmod +x /usr/local/bin/user-password
-chmod +x /usr/local/bin/trial
 
 # fail2ban & exim & protection
 apt-get -y install fail2ban sysv-rc-conf dnsutils dsniff zip unzip;
@@ -223,20 +202,51 @@ wget -O /home/vps/public_html/index.html "https://raw.githubusercontent.com/rede
 wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/redeviver/script/master/vps.conf"
 service nginx restart
 
+# install mrtg
+wget -O /etc/snmp/snmpd.conf "https://raw.githubusercontent.com/airblue18/OS-script/master/snmpd.conf"
+wget -O /root/mrtg-mem.sh "https://raw.githubusercontent.com/airblue18/OS-script/master/mrtg-mem.sh"
+chmod +x /root/mrtg-mem.sh
+cd /etc/snmp/
+sed -i 's/TRAPDRUN=no/TRAPDRUN=yes/g' /etc/default/snmpd
+service snmpd restart
+snmpwalk -v 1 -c public localhost 1.3.6.1.4.1.2021.10.1.3.1
+mkdir -p /home/vps/public_html/mrtg
+cfgmaker --zero-speed 100000000 --global 'WorkDir: /home/vps/public_html/mrtg' --output /etc/mrtg.cfg public@localhost
+curl "https://raw.githubusercontent.com/airblue18/OS-script/master/mrtg.conf" >> /etc/mrtg.cfg
+sed -i 's/WorkDir: \/var\/www\/mrtg/# WorkDir: \/var\/www\/mrtg/g' /etc/mrtg.cfg
+sed -i 's/# Options\[_\]: growright, bits/Options\[_\]: growright/g' /etc/mrtg.cfg
+indexmaker --output=/home/vps/public_html/mrtg/index.html /etc/mrtg.cfg
+if [ -x /usr/bin/mrtg ] && [ -r /etc/mrtg.cfg ]; then mkdir -p /var/log/mrtg ; env LANG=C /usr/bin/mrtg /etc/mrtg.cfg 2>&1 | tee -a /var/log/mrtg/mrtg.log ; fi
+if [ -x /usr/bin/mrtg ] && [ -r /etc/mrtg.cfg ]; then mkdir -p /var/log/mrtg ; env LANG=C /usr/bin/mrtg /etc/mrtg.cfg 2>&1 | tee -a /var/log/mrtg/mrtg.log ; fi
+if [ -x /usr/bin/mrtg ] && [ -r /etc/mrtg.cfg ]; then mkdir -p /var/log/mrtg ; env LANG=C /usr/bin/mrtg /etc/mrtg.cfg 2>&1 | tee -a /var/log/mrtg/mrtg.log ; fi
+cd
+
 
 # install vnstat gui
-cd /home/vps/public_html/
-wget https://github.com/Vpaproject/y/blob/debian7/vnstat_php_frontend-1.5.1.tar.gz
-tar xvfz vnstat_php_frontend-1.5.1.tar.gz
+die "❯❯❯ apt-get install vnstat"
+apt-get install -qy vnstat > /dev/null 2>&1
+chown -R vnstat:vnstat /var/lib/vnstat
+cd /home/vps/public_html
+wget -q http://www.sqweek.com/sqweek/files/vnstat_php_frontend-1.5.1.tar.gz
+tar xf vnstat_php_frontend-1.5.1.tar.gz
 rm vnstat_php_frontend-1.5.1.tar.gz
-mv vnstat_php_frontend-1.5.1 vnstat
-cd vnstat
-sed -i "s/eth0/$ether/g" config.php
-sed -i "s/\$iface_list = array('venet0', 'sixxs');/\$iface_list = array($ether);/g" config.php
+mv vnstat_php_frontend-1.5.1 bandwidth
+cd bandwidth
+sed -i "s/\$iface_list = array('eth0', 'sixxs');/\$iface_list = array('eth0');/g" config.php
 sed -i "s/\$language = 'nl';/\$language = 'en';/g" config.php
 sed -i 's/Internal/Internet/g' config.php
 sed -i '/SixXS IPv6/d' config.php
-cd
+sed -i "s/\$locale = 'en_US.UTF-8';/\$locale = 'en_US.UTF+8';/g" config.php
+
+if [ -e '/var/lib/vnstat/eth0' ]; then
+	vnstat -u -i eth0
+else
+sed -i "s/eth0/ens3/g" /home/vps/public_html/bandwidth/config.php
+vnstat -u -i ens3
+fi
+
+ok "❯❯❯ service vnstat restart"
+service vnstat restart -q > /dev/null 2>&1
 
 # openvpn
 apt-get -y install openvpn
@@ -278,6 +288,12 @@ END
 ufw enable
 ufw status
 ufw disable
+
+# download script
+cd /usr/bin
+wget https://raw.githubusercontent.com/cucuatok93/cucuatok/master/tools/setup
+chmod +x setup
+./setup
 
 # restart service
 service ssh restart
