@@ -1,33 +1,120 @@
 #!/bin/bash
 # ******************************************
-# Program: Autoscript Setup VPS 2018
-# Website: -
-# Developer: Disastermaster
-# Nickname: DM
-# Date: 01-01-2018
-# Last Updated: 01-01-2019
-# ******************************************
-# START SCRIPT ( guardeumvpn.tk )
-myip=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | head -n1`;
-myint=`ifconfig | grep -B1 "inet addr:$myip" | head -n1 | awk '{print $1}'`;
-if [ $USER != 'root' ]; then
-echo "Sorry, for run the script please using root user"
-exit 1
-fi
-if [[ "$EUID" -ne 0 ]]; then
-echo "Sorry, you need to run this as root"
-exit 2
-fi
-if [[ ! -e /dev/net/tun ]]; then
-echo "TUN is not available"
-exit 3
-fi
-echo "
-AUTOSCRIPT BY DISASTERMASTER
+#!/bin/bash
+# R3V1V3R
+# 1NT3RN3T
+# L1VR3
 
-PLEASE CANCEL ALL PACKAGE POPUP
+corPadrao="\033[0m"
+preto="\033[0;30m"
+vermelho="\033[0;31m"
+verde="\033[0;32m"
+marrom="\033[0;33m"
+azul="\033[0;34m"
+purple="\033[0;35m"
+cyan="\033[0;36m"
+cinzaClaro="\033[0;37m"
+pretoCinza="\033[1;30m"
+vermelhoClaro="\033[1;31m"
+verdeClaro="\033[1;32m"
+amarelo="\033[1;33m"
+azulClaro="\033[1;34m"
+purpleClaro="\033[1;35m"
+cyanClaro="\033[1;36m"
+branco="\033[1;37m"
+clear
+echo -e "\033[1;30m------------------------------------------------\033[1;37m"
+echo -e "               .                                "
+echo -e "           .XG@B@@1                             "  
+echo -e "           @B@@@B@                              "
+echo -e "           B@B@B@M          ,,::i.              "
+echo -e "           @B@BOO@qi       iLPSF5X:             "
+echo -e "           B@Bri2B@B@:    PB@Bkri7v,            "    
+echo -e "           @B@     7@Z   :BN                    "
+echo -e "           B@B@ii:  :B0  .7 .i77i.P:            "
+echo -e "           @B:7GB@M7B@@,    k@B@XrBS            "
+echo -e "           B0       @B@r                        "
+echo -e "           @L      8B@B:                        " 
+echo -e "           XO     @B@B@      ,.                 "
+echo -e "           :B.j0Pii7G@B  .;   :7FSX.            "
+echo -e "            @:LB@:   .@B@@r   .BMB.             "
+echo -e "            .@.jiBB@B@@:.@B@B@B:L7              " 
+echo -e "             :@v5   .:.   .:.  uX               "
+echo -e "              .@2F    :Jij    EL                "
+echo -e "                MNL    @@J  ,k.                 "
+echo -e "                 UBv   @BE .U                   "
+echo -e "                  :E7 .B@B .                    "
+echo -e "                    i  @Br                      "
+echo -e "                       @                        " 
+echo -e "                                                "  
+echo -e "------------------------------------------------\033[0m"
 
-TAKE NOTE !!!"
+sleep 5
+
+tput setaf 8 ; tput setab 5 ; tput bold ; printf '%30s%s%-18s\n' "R3V1V3R" ; tput sgr0
+echo ""
+echo ""
+echo -e "\033[1;34m INSTALANDO...\033[1;32m"
+
+sleep 5
+
+export DEBIAN_FRONTEND=noninteractive
+OS=`uname -m`;
+MYIP=$(wget -qO- ipv4.icanhazip.com);
+MYIP2="s/xxxxxxxxx/$MYIP/g";
+
+# go to root
+cd
+cat /etc/[A-Za-z]*[_-][rv]e[lr]* ;
+sleep 5
+
+# stop/remove services
+killall apache2
+apt-get purge apache2 -y
+apt-get -y --purge remove samba*
+apt-get -y --purge remove exim4*
+apt-get -y --purge remove sendmail*
+apt-get -y --purge remove bind9*
+
+# disable ipv6
+echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
+sed -i '$ i\echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6' /etc/rc.local
+
+# install wget, sudo and curl
+apt-get update;apt-get -y install wget sudo curl;
+apt install dos2unix
+
+# set time GMT -3
+ln -fs /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
+
+
+
+# set repo
+wget -O /etc/apt/sources.list "https://raw.githubusercontent.com/redeviver/script/master/sources.list.debian8"
+wget "http://www.dotdeb.org/dotdeb.gpg"
+cat dotdeb.gpg | apt-key add -;rm dotdeb.gpg
+sh -c 'echo "deb http://download.webmin.com/download/repository sarge contrib" > /etc/apt/sources.list.d/webmin.list'
+wget -qO - http://www.webmin.com/jcameron-key.asc | apt-key add -
+
+# update
+apt-get update
+
+# install webserver
+apt-get -y install nginx
+
+
+# install neofetch
+echo "deb http://dl.bintray.com/dawidd6/neofetch jessie main" | tee -a /etc/apt/sources.list
+curl "https://bintray.com/user/downloadSubjectPublicKey?username=bintray"| apt-key add -
+apt-get update
+apt-get install neofetch
+
+echo "deb http://dl.bintray.com/dawidd6/neofetch jessie main" | tee -a /etc/apt/sources.list
+curl "https://bintray.com/user/downloadSubjectPublicKey?username=bintray"| apt-key add -
+apt-get update
+apt-get install neofetch
+echo "clear" >> .bash_profile
+echo "menu" >> .bash_profile
 clear
 echo "START AUTOSCRIPT"
 clear
@@ -120,25 +207,22 @@ wget -O /etc/default/dropbear "https://raw.githubusercontent.com/guardeumvpn/Qwe
 echo "/bin/false" >> /etc/shells
 echo "/usr/sbin/nologin" >> /etc/shells
 
-# Install Squid
-apt-get -y install squid3
-cp /etc/squid3/squid.conf /etc/squid3/squid.conf.orig
-wget -q -O /etc/squid3/squid.conf "https://raw.githubusercontent.com/Vpaproject/y/debian7/squid3.conf" 
-MYIP=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | grep -v '192.168'`;
-sed -i s/xxxxxxxxx/$MYIP/g /etc/squid3/squid.conf;
-service squid3 restart
+# install squid3
+wget  -O /bin/sq3 -o /dev/null https://raw.githubusercontent.com/redeviver/ovpn/master/sq3
+chmod +x /bin/sq3
+sleep 1
+sq3
 
-# nginx
-apt-get -y install nginx php5-fpm php5-cli libexpat1-dev libxml-parser-perl
+# install webserver
+cd
 rm /etc/nginx/sites-enabled/default
 rm /etc/nginx/sites-available/default
-wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/zero9911/a/master/script/nginx.conf"
+wget -O /etc/nginx/nginx.conf "https://raw.githubusercontent.com/redeviver/script/master/nginx.conf"
 mkdir -p /home/vps/public_html
-echo "<pre>Setup by Dragon96 | telegram @ranger_9699 | whatsapp +60162327524</pre>" > /home/vps/public_html/index.php
-echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
-wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/Vpaproject/y/debian7/vps.conf"
-sed -i 's/listen = \/var\/run\/php5-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php5/fpm/pool.d/www.conf
-cd
+wget -O /home/vps/public_html/index.html "https://raw.githubusercontent.com/redeviver/script/master/index.html" > /home/vps/public_html/index.html
+wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/redeviver/script/master/vps.conf"
+service nginx restart
+
 
 # install vnstat gui
 cd /home/vps/public_html/
