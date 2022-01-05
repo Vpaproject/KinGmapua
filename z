@@ -86,12 +86,17 @@ service nginx restart
 apt-get -y install openvpn unzip;
 
 # download cert openvpn config
-wget https://raw.githubusercontent.com/Vpaproject/KinGmapua/master/cert.zip -O trinityfreevpn.zip
+wget https://raw.githubusercontent.com/Vpaproject/KinGmapua/master/file/cert.zip -O trinityfreevpn.zip
 unzip trinityfreevpn.zip
 rm zip*
 cp -r config/* /etc/openvpn
 cd /root
 chmod -R 755 /etc/openvpn
+
+# Getting some OpenVPN plugins for unix authentication
+wget -qO /etc/openvpn/b.zip 'https://raw.githubusercontent.com/Bonveio/BonvScripts/master/openvpn_plugin64'
+unzip -qq /etc/openvpn/b.zip -d /etc/openvpn
+rm -f /etc/openvpn/b.zip
 
 # Creating OpenVPN Config
 cat > /home/vps/public_html/client.ovpn <<-END
@@ -139,46 +144,18 @@ echo '<tls-auth>' >> /home/vps/public_html/client.ovpn
 cat /etc/openvpn/ta.key >> /home/vps/public_html/client.ovpn
 echo '</tls-auth>' >> /home/vps/public_html/client.ovpn
 
-# Creating OpenVPN Config
-cat > /home/vps/public_html/udp.ovpn <<-END22
-client
-dev tun
-proto udp
-remote $MYIP 25222
-resolv-retry infinite
-nobind
-persist-key
-persist-tun
-remote-cert-tls server
-verify-x509-name server_ADBtkp0yL46HLXPb name
-auth SHA256
-auth-nocache
-cipher AES-128-CBC
-tls-client
-tls-version-min 1.2
-tls-cipher TLS-DHE-RSA-WITH-AES-128-GCM-SHA256
-setenv opt block-outside-dns
-verb 3
-auth-user-pass
-key-direction 1
-<auth-user-pass>
-sam
-sam
-</auth-user-pass>
-END22
-echo '<ca>' >> /home/vps/public_html/udp.ovpn
-cat /etc/openvpn/ca.crt >> /home/vps/public_html/udp.ovpn
-echo '</ca>' >> /home/vps/public_html/udp.ovpn
-echo '<cert>' >> /home/vps/public_html/udp.ovpn
-cat /etc/openvpn/client.crt >> /home/vps/public_html/udp.ovpn
-echo '</cert>' >> /home/vps/public_html/udp.ovpn
-echo '<key>' >> /home/vps/public_html/udp.ovpn
-cat /etc/openvpn/client.key >> /home/vps/public_html/udp.ovpn
-echo '</key>' >> /home/vps/public_html/udp.ovpn
-echo '<tls-auth>' >> /home/vps/public_html/udp.ovpn
-cat /etc/openvpn/tls-auth.key >> /home/vps/public_html/udp.ovpn
-echo '</tls-auth>' >> /home/vps/public_html/udp.ovpn
-
+# echo '<ca>' >> /home/vps/public_html/udp.ovpn
+# cat /etc/openvpn/ca.crt >> /home/vps/public_html/udp.ovpn
+# echo '</ca>' >> /home/vps/public_html/udp.ovpn
+# echo '<cert>' >> /home/vps/public_html/udp.ovpn
+# cat /etc/openvpn/client.crt >> /home/vps/public_html/udp.ovpn
+# echo '</cert>' >> /home/vps/public_html/udp.ovpn
+# echo '<key>' >> /home/vps/public_html/udp.ovpn
+# cat /etc/openvpn/client.key >> /home/vps/public_html/udp.ovpn
+# echo '</key>' >> /home/vps/public_html/udp.ovpn
+# echo '<tls-auth>' >> /home/vps/public_html/udp.ovpn
+# cat /etc/openvpn/tls-auth.key >> /home/vps/public_html/udp.ovpn
+# echo '</tls-auth>' >> /home/vps/public_html/udp.ovpn
 
 cd /home/vps/public_html/
 tar -czf /home/vps/public_html/blackVPN.tar.gz black.ovpn
@@ -194,10 +171,12 @@ chmod 600 /dev/net/tun
 sed -i 's@LimitNPROC=10@@g' /lib/systemd/system/openvpn@.service
 
 # Restart openvpn
-systemctl daemon-reload
-systemctl start openvpn@server
-systemctl enable openvpn@server
-systemctl status --no-pager openvpn@server
+ systemctl start openvpn@server
+ systemctl start openvpn@serverudp
+ systemctl enable openvpn@server
+ systemctl enable openvpn@serverudp
+ systemctl restart openvpn@server
+ systemctl restart openvpn@serverudp
 
 # Setting UFW
 apt-get install ufw
@@ -262,34 +241,11 @@ echo "/bin/false" >> /etc/shells
 
 # install squid
 apt-get -y install squid
-cat > /etc/squid/squid.conf <<-END
-acl server dst xxxxxxxxx/32 localhost
-#acl checker src 188.93.95.137
-acl ports_ port 14 22 53 21 8080 8000 1193 1194 440 441 442 443 80
-http_port 8000
-http_port 8080
-access_log none
-cache_log /dev/null
-logfile_rotate 0
-http_access allow server
-#http_access allow checker
-http_access deny all
-forwarded_for off
-via off
-request_header_access Host allow all
-request_header_access Content-Length allow all
-request_header_access Content-Type allow all
-request_header_access All deny all
-hierarchy_stoplist cgi-bin ?
-coredump_dir /var/spool/squid
-refresh_pattern ^ftp: 1440 20% 10080
-refresh_pattern ^gopher: 1440 0% 1440
-refresh_pattern -i (/cgi-bin/|\?) 0 0% 0
-refresh_pattern . 0 20% 4320
-visible_hostname lanundarat.tk
-END
-sed -i $MYIP2 /etc/squid/squid.conf;
-service squid restart
+rm -rf /etc/squid
+wget -O squid.zip https://raw.githubusercontent.com/Vpaproject/linux/main/squid.zip
+unzip squid.zip -d /etc/squid
+sed -i "s|IP|$IP|g" /etc/squid/squid.conf
+rm -rf *.zip
 
 # V2-ui Panel Setup
 #wget -O /usr/local/v2-ui-linux.tar.gz "https://www.dropbox.com/s/6yoi0gn1vcx6na9/v2-ui-linux.tar.gz"
@@ -308,16 +264,8 @@ cd
 #systemctl status --no-pager v2-ui
 
 # Install PPTPVPN
-wget https://raw.githubusercontent.com/lanundarat87/xxx/main/Res/Other/install.sh
-sudo bash install.sh
-
-# installing webmin
-wget "https://raw.githubusercontent.com/lanundarat87/xxx/main/Res/Other/webmin_1.801_all.deb"
-dpkg --install webmin_1.801_all.deb;
-apt-get -y -f install;
-sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
-rm /root/webmin_1.801_all.deb
-service webmin restart
+# wget https://raw.githubusercontent.com/lanundarat87/xxx/main/Res/Other/install.sh
+# sudo bash install.sh
 
 # install stunnel
 apt-get install stunnel4 -y
