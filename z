@@ -86,44 +86,100 @@ service nginx restart
 apt-get -y install openvpn unzip;
 
 # download cert openvpn config
-wget https://raw.githubusercontent.com/Clrkz/AutoScriptVPS/master/Files/Certificate/cert.zip -O trinityfreevpn.zip
+wget https://raw.githubusercontent.com/Vpaproject/KinGmapua/master/cert.zip -O trinityfreevpn.zip
 unzip trinityfreevpn.zip
 rm zip*
 cp -r config/* /etc/openvpn
 cd /root
 chmod -R 755 /etc/openvpn
 
-
 # Creating OpenVPN Config
 cat > /home/vps/public_html/client.ovpn <<-END
 client
 dev tun
 proto tcp
-remote $MYIP 443
-resolv-retry infinite
-redirect-gateway def1
-nobind
-sndbuf 393216
-rcvbuf 393216
-tun-mtu 1470
-mssfix 1430
-auth-user-pass
-comp-lzo
+remote $MYIP 1103
 http-proxy $MYIP 8080
 http-proxy-retry
-http-proxy-timeout 5
-http-proxy-option CUSTOM-HEADER Host www.googlevideo.com
-http-proxy-option CUSTOM-HEADER X-Online-Host www.googlevideo.com
-route $MYIP 255.255.255.255 vpn_gateway
-keepalive 10 120
-reneg-sec 432000
+route-method exe
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+comp-lzo
+cipher AES-256-CBC
+auth SHA256
+push "redirect-gateway def1 bypass-dhcp"
 verb 3
-script-security 3
-setenv CLIENT_CERT 0
+push-peer-info
+ping 10
+ping-restart 60
+hand-window 70
+server-poll-timeout 4
+reneg-sec 2592000
+sndbuf 0
+rcvbuf 0
+remote-cert-tls server
+key-direction 1
+<auth-user-pass>
+sam
+sam
+</auth-user-pass>
 END
 echo '<ca>' >> /home/vps/public_html/client.ovpn
 cat /etc/openvpn/ca.crt >> /home/vps/public_html/client.ovpn
 echo '</ca>' >> /home/vps/public_html/client.ovpn
+echo '<cert>' >> /home/vps/public_html/client.ovpn
+cat /etc/openvpn/client.crt >> /home/vps/public_html/client.ovpn
+echo '</cert>' >> /home/vps/public_html/client.ovpn
+echo '<key>' >> /home/vps/public_html/client.ovpn
+cat /etc/openvpn/client.key >> /home/vps/public_html/client.ovpn
+echo '</key>' >> /home/vps/public_html/client.ovpn
+echo '<tls-auth>' >> /home/vps/public_html/client.ovpn
+cat /etc/openvpn/ta.key >> /home/vps/public_html/client.ovpn
+echo '</tls-auth>' >> /home/vps/public_html/client.ovpn
+
+# Creating OpenVPN Config
+cat > /home/vps/public_html/udp.ovpn <<-END22
+client
+dev tun
+proto udp
+remote $MYIP 25222
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+remote-cert-tls server
+verify-x509-name server_ADBtkp0yL46HLXPb name
+auth SHA256
+auth-nocache
+cipher AES-128-CBC
+tls-client
+tls-version-min 1.2
+tls-cipher TLS-DHE-RSA-WITH-AES-128-GCM-SHA256
+setenv opt block-outside-dns
+verb 3
+auth-user-pass
+key-direction 1
+<auth-user-pass>
+sam
+sam
+</auth-user-pass>
+END22
+echo '<ca>' >> /home/vps/public_html/udp.ovpn
+cat /etc/openvpn/ca.crt >> /home/vps/public_html/udp.ovpn
+echo '</ca>' >> /home/vps/public_html/udp.ovpn
+echo '<cert>' >> /home/vps/public_html/udp.ovpn
+cat /etc/openvpn/client.crt >> /home/vps/public_html/udp.ovpn
+echo '</cert>' >> /home/vps/public_html/udp.ovpn
+echo '<key>' >> /home/vps/public_html/udp.ovpn
+cat /etc/openvpn/client.key >> /home/vps/public_html/udp.ovpn
+echo '</key>' >> /home/vps/public_html/udp.ovpn
+echo '<tls-auth>' >> /home/vps/public_html/udp.ovpn
+cat /etc/openvpn/tls-auth.key >> /home/vps/public_html/udp.ovpn
+echo '</tls-auth>' >> /home/vps/public_html/udp.ovpn
+
+
 cd /home/vps/public_html/
 tar -czf /home/vps/public_html/blackVPN.tar.gz black.ovpn
 tar -czf /home/vps/public_html/black.tar.gz black.ovpn
@@ -146,7 +202,7 @@ systemctl status --no-pager openvpn@server
 # Setting UFW
 apt-get install ufw
 ufw allow ssh
-ufw allow 443/tcp
+ufw allow 1103/tcp
 sed -i 's|DEFAULT_INPUT_POLICY="DROP"|DEFAULT_INPUT_POLICY="ACCEPT"|' /etc/default/ufw
 sed -i 's|DEFAULT_FORWARD_POLICY="DROP"|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
 cat > /etc/ufw/before.rules <<-END
