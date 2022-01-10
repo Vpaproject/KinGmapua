@@ -175,7 +175,7 @@ function InsStunnel(){
 
  # Restarting stunnel service
  systemctl restart $StunnelDir
-
+}
 # nginx
 apt-get -y install nginx php-fpm php-mcrypt php-cli libexpat1-dev libxml-parser-perl
 rm /etc/nginx/sites-enabled/default
