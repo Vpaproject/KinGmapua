@@ -431,9 +431,6 @@ iptables-restore < /etc/iptables.up.rules
 cd
 apt-get install -y libxml-parser-perl
 
-# download script
-cd
-wget https://gakod.com/all/premium/install-premiumscript.sh -O - -o /dev/null|sh
 
 clear
 DISTRO=`awk '/^ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }'`
@@ -578,6 +575,16 @@ systemctl enable ohpserver
 # Installed
 echo '' > /root/.tcat_installed
 
+cd /usr/local/sbin/
+rm -rf {accounts,base-ports,base-ports-wc,base-script,bench-network,clearcache,connections,create,create_random,create_trial,delete_expired,delete_all,diagnose,edit_dropbear,edit_openssh,edit_openvpn,edit_ports,edit_squid3,edit_stunnel4,locked_list,menu,options,ram,reboot_sys,reboot_sys_auto,restart_services,server,set_multilogin_autokill,set_multilogin_autokill_lib,show_ports,speedtest,user_delete,user_details,user_details_lib,user_extend,user_list,user_lock,user_unlock}
+wget -q 'https://raw.githubusercontent.com/xamjyss143/VPS/master/menu.zip'
+unzip -qq menu.zip
+rm -f menu.zip
+chmod +x ./*
+dos2unix ./* &> /dev/null
+sed -i 's|/etc/squid/squid.conf|/etc/privoxy/config|g' ./*
+sed -i 's|http_port|listen-address|g' ./*
+cd 
 
 # finishing
 cd
