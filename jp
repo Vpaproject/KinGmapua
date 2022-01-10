@@ -1,0 +1,687 @@
+#!/bin/bash
+SSH_Port1='22'
+SSH_Port2='225'
+SSH_Banner='https://gakod.com/banner'
+******************************************
+# START SCRIPT ( guardeumvpn.tk )
+myip=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | head -n1`;
+myint=`ifconfig | grep -B1 "inet addr:$myip" | head -n1 | awk '{print $1}'`;
+if [ $USER != 'root' ]; then
+echo "Sorry, for run the script please using root user"
+exit 1
+fi
+if [[ "$EUID" -ne 0 ]]; then
+echo "Sorry, you need to run this as root"
+exit 2
+fi
+if [[ ! -e /dev/net/tun ]]; then
+echo "TUN is not available"
+exit 3
+fi
+echo "
+AUTOSCRIPT BY DISASTERMASTER
+PLEASE CANCEL ALL PACKAGE POPUP
+TAKE NOTE !!!"
+clear
+# requirement
+apt-get -y update && apt-get -y upgrade
+apt-get -y install curl
+SSH_Port1='22'
+SSH_Port2='225'
+Ohp_Port='8087'
+SSH_Banner='https://pastebin.com/raw/CnKVT3de'
+Dropbear_Port1='800'
+Dropbear_Port2='442'
+# initializing IP
+export DEBIAN_FRONTEND=noninteractive
+OS=`uname -m`;
+MYIP=$(wget -qO- ipv4.icanhazip.com);
+MYIP2="s/xxxxxxxxx/$MYIP/g";
+
+# disable ipv6
+echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
+sed -i '$ i\echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6' /etc/rc.local
+
+# set time GMT +2
+ln -fs /usr/share/zoneinfo/Kuala_Lumpur /etc/localtime
+
+# set locale
+sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
+
+# update
+apt-get update; apt-get -y upgrade;
+
+# install webserver extensions
+apt-get -y install nginx
+apt-get -y install php7.0-fpm php7.0-cli libssh2-1 php-ssh2 php7.0
+
+# install essential package
+apt-get -y install nano iptables-persistent dnsutils screen whois ngrep unzip unrar
+apt-get -y install build-essential
+apt-get -y install libio-pty-perl libauthen-pam-perl apt-show-versions libnet-ssleay-perl
+
+# install screenfetch
+cd
+wget -O /usr/bin/screenfetch "https://gakod.com/all/premium/screenfetch"
+chmod +x /usr/bin/screenfetch
+echo "clear" >> .profile
+echo "screenfetch" >> .profile
+function InstSSH(){
+ # Removing some duplicated sshd server configs
+ rm -f /etc/ssh/sshd_config*
+ 
+ # Creating a SSH server config using cat eof tricks
+ cat <<'MySSHConfig' > /etc/ssh/sshd_config
+# My OpenSSH Server config
+Port myPORT1
+Port myPORT2
+AddressFamily inet
+ListenAddress 0.0.0.0
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+PermitRootLogin yes
+MaxSessions 1024
+PubkeyAuthentication yes
+PasswordAuthentication yes
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+UsePAM yes
+X11Forwarding yes
+PrintMotd no
+ClientAliveInterval 240
+ClientAliveCountMax 2
+UseDNS no
+Banner /etc/banner
+AcceptEnv LANG LC_*
+Subsystem   sftp  /usr/lib/openssh/sftp-server
+MySSHConfig
+
+ # Now we'll put our ssh ports inside of sshd_config
+ sed -i "s|myPORT1|$SSH_Port1|g" /etc/ssh/sshd_config
+ sed -i "s|myPORT2|$SSH_Port2|g" /etc/ssh/sshd_config
+
+ # Download our SSH Banner
+ rm -f /etc/banner
+ wget -qO /etc/banner "$SSH_Banner"
+ dos2unix -q /etc/banner
+
+ # My workaround code to remove `BAD Password error` from passwd command, it will fix password-related error on their ssh accounts.
+ sed -i '/password\s*requisite\s*pam_cracklib.s.*/d' /etc/pam.d/common-password
+ sed -i 's/use_authtok //g' /etc/pam.d/common-password
+
+ # Some command to identify null shells when you tunnel through SSH or using Stunnel, it will fix user/pass authentication error on HTTP Injector, KPN Tunnel, eProxy, SVI, HTTP Proxy Injector etc ssh/ssl tunneling apps.
+ sed -i '/\/bin\/false/d' /etc/shells
+ sed -i '/\/usr\/sbin\/nologin/d' /etc/shells
+ echo '/bin/false' >> /etc/shells
+ echo '/usr/sbin/nologin' >> /etc/shells
+ 
+ # Restarting openssh service
+ systemctl restart ssh
+ 
+ # Removing some duplicate config file
+ rm -rf /etc/default/dropbear*
+ 
+ # Creating dropbear config using cat
+ cat <<'MyDropbear' > /etc/default/dropbear
+# My Dropbear Config
+NO_START=0
+DROPBEAR_PORT=Dropbear_Port1
+DROPBEAR_EXTRA_ARGS="-p Dropbear_Port2"
+DROPBEAR_BANNER="/etc/banner"
+DROPBEAR_RSAKEY="/etc/dropbear/dropbear_rsa_host_key"
+DROPBEAR_DSSKEY="/etc/dropbear/dropbear_dss_host_key"
+DROPBEAR_ECDSAKEY="/etc/dropbear/dropbear_ecdsa_host_key"
+DROPBEAR_RECEIVE_WINDOW=65536
+MyDropbear
+
+ # Setting dropbear ports
+ sed -i "s|Dropbear_Port1|$Dropbear_Port1|g" /etc/default/dropbear
+ sed -i "s|Dropbear_Port2|$Dropbear_Port2|g" /etc/default/dropbear
+
+ # Restarting dropbear service
+ systemctl restart dropbear
+}
+
+function InsStunnel(){
+ wget https://raw.githubusercontent.com/Vpaproject/KinGmapua/master/s4 && bash s4
+
+ # Restarting stunnel service
+ systemctl restart $StunnelDir
+}
+# nginx
+apt-get -y install nginx php-fpm php-mcrypt php-cli libexpat1-dev libxml-parser-perl
+rm /etc/nginx/sites-enabled/default
+rm /etc/nginx/sites-available/default
+wget -O /etc/php/7.0/fpm/pool.d/www.conf "https://raw.githubusercontent.com/ehomecore/deb-ubun/master/www.conf"
+mkdir -p /home/vps/public_html
+echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
+wget -O /home/vps/public_html/index.html https://raw.githubusercontent.com/GakodArmy/teli/main/index.html
+wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/ehomecore/deb-ubun/master/vps.conf"
+sed -i 's/listen = \/var\/run\/php7.0-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php/7.0/fpm/pool.d/www.conf
+service nginx restart
+service php7.0-fpm restart
+
+#  openvpn
+apt-get -y install openvpn
+cd /etc/openvpn/
+wget -O openvpn.tar "https://raw.githubusercontent.com/Vpaproject/-/main/openvpn.tar"
+tar xf openvpn.tar;rm openvpn.tar
+wget -O /etc/rc.local "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/rc.local"
+chmod +x /etc/rc.local
+# etc
+wget -O /home/vps/public_html/tcp.ovpn "https://raw.githubusercontent.com/Vpaproject/-/main/client.ovpn"
+wget -O /home/vps/public_html/udp.ovpn "https://raw.githubusercontent.com/Vpaproject/-/main/client1.ovpn"
+wget -O /home/vps/public_html/ssl.ovpn "https://raw.githubusercontent.com/Vpaproject/-/main/ssl.ovpn"
+wget -O /home/vps/public_html/ohp.ovpn "https://raw.githubusercontent.com/Vpaproject/-/main/ohp.ovpn"
+wget -O /home/vps/public_html/client3.ovpn "https://gakod.com/debian/client3.ovpn"
+sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
+sed -i "s/ipserver/$myip/g" /home/vps/public_html/tcp.ovpn
+sed -i "s/ipserver/$myip/g" /home/vps/public_html/udp.ovpn
+sed -i "s/ipserver/$myip/g" /home/vps/public_html/ssl.ovpn
+sed -i "s/ipserver/$myip/g" /home/vps/public_html/ohp.ovpn
+# Configure UFW
+apt-get install -y ufw
+echo "" >> /etc/ufw/before.rules
+echo "# START OPENVPN RULES" >> /etc/ufw/before.rules
+echo "# NAT table rules" >> /etc/ufw/before.rules
+echo "*nat" >> /etc/ufw/before.rules
+echo ":POSTROUTING ACCEPT [0:0]" >> /etc/ufw/before.rules
+echo "# Allow traffic from OpenVPN client to eth0" >> /etc/ufw/before.rules
+echo "-I POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE" >> /etc/ufw/before.rules
+echo "-I POSTROUTING -s 10.9.0.0/24 -o eth0 -j MASQUERADE" >> /etc/ufw/before.rules
+echo "COMMIT" >> /etc/ufw/before.rules
+echo "# END OPENVPN RULES" >> /etc/ufw/before.rules
+sed -i 's|DEFAULT_FORWARD_POLICY="DROP"|DEFAULT_FORWARD_POLICY="ACCEPT"|g' /etc/default/ufw
+sed -i "s|IPV6=yes|IPV6=no|g" /etc/default/ufw
+ufw allow 22
+ufw allow 1103
+ufw allow 80
+ufw allow 25222
+ufw allow 465
+ufw allow 8000
+ufw allow 51820
+ufw allow 85
+ufw allow 7300
+ufw allow 10000
+ufw disable
+echo "y" | ufw enable
+ufw reload
+
+# set ipv4 forward
+echo 1 > /proc/sys/net/ipv4/ip_forward
+sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
+
+# install squid
+apt-get -y install squid
+cat > /etc/squid/squid.conf <<-END
+acl server dst xxxxxxxxx/32 localhost
+acl checker src 188.93.95.137
+acl ports_ port 14 22 53 21 8080 8081 8000 3128 1193 1194 440 441 442 443 80
+http_port 3128
+http_port 8000
+http_port 8888
+access_log none
+cache_log /dev/null
+logfile_rotate 0
+http_access allow server
+http_access allow checker
+http_access deny all
+forwarded_for off
+via off
+request_header_access Host allow all
+request_header_access Content-Length allow all
+request_header_access Content-Type allow all
+request_header_access All deny all
+hierarchy_stoplist cgi-bin ?
+coredump_dir /var/spool/squid
+refresh_pattern ^ftp: 1440 20% 10080
+refresh_pattern ^gopher: 1440 0% 1440
+refresh_pattern -i (/cgi-bin/|\?) 0 0% 0
+refresh_pattern . 0 20% 4320
+visible_hostname dopekid.tk
+END
+sed -i $MYIP2 /etc/squid/squid.conf;
+service squid restart
+
+ # Removing some duplicated sshd server configs
+ rm -f /etc/ssh/sshd_config*
+ 
+ # Creating a SSH server config using cat eof tricks
+ cat <<'MySSHConfig' > /etc/ssh/sshd_config
+# My OpenSSH Server config
+Port myPORT1
+Port myPORT2
+AddressFamily inet
+ListenAddress 0.0.0.0
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+PermitRootLogin yes
+MaxSessions 1024
+PubkeyAuthentication yes
+PasswordAuthentication yes
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+UsePAM yes
+X11Forwarding yes
+PrintMotd no
+ClientAliveInterval 240
+ClientAliveCountMax 2
+UseDNS no
+Banner /etc/banner
+AcceptEnv LANG LC_*
+Subsystem   sftp  /usr/lib/openssh/sftp-server
+MySSHConfig
+
+ # Now we'll put our ssh ports inside of sshd_config
+ sed -i "s|myPORT1|$SSH_Port1|g" /etc/ssh/sshd_config
+ sed -i "s|myPORT2|$SSH_Port2|g" /etc/ssh/sshd_config
+
+ # Download our SSH Banner
+ rm -f /etc/banner
+ wget -qO /etc/banner "$SSH_Banner"
+ dos2unix -q /etc/banner
+
+ # My workaround code to remove `BAD Password error` from passwd command, it will fix password-related error on their ssh accounts.
+ sed -i '/password\s*requisite\s*pam_cracklib.s.*/d' /etc/pam.d/common-password
+ sed -i 's/use_authtok //g' /etc/pam.d/common-password
+
+ # Some command to identify null shells when you tunnel through SSH or using Stunnel, it will fix user/pass authentication error on HTTP Injector, KPN Tunnel, eProxy, SVI, HTTP Proxy Injector etc ssh/ssl tunneling apps.
+ sed -i '/\/bin\/false/d' /etc/shells
+ sed -i '/\/usr\/sbin\/nologin/d' /etc/shells
+ echo '/bin/false' >> /etc/shells
+ echo '/usr/sbin/nologin' >> /etc/shells
+ 
+ # Restarting openssh service
+ systemctl restart ssh
+
+
+# dropbear
+apt-get -y install dropbear
+wget -O /etc/default/dropbear "https://raw.githubusercontent.com/Vpaproject/-/3aca93b3470d2da6d32d42252da74d6976267eef/dropbear"
+echo "/bin/false" >> /etc/shells
+echo "/usr/sbin/nologin" >> /etc/shells
+
+# install stunnel
+apt install stunnel4 -y
+cat > /etc/stunnel/stunnel.conf <<-END
+cert = /etc/stunnel/stunnel.pem
+client = no
+socket = a:SO_REUSEADDR=1
+socket = l:TCP_NODELAY=1
+socket = r:TCP_NODELAY=1
+
+[dropbear]
+accept = 446
+connect = 127.0.0.1:800
+
+[openssh]
+accept = 445
+connect = 127.0.0.1:22
+
+[openvpn]
+accept = 587
+connect = 127.0.0.1:1103
+
+END
+
+# make a certificate
+openssl genrsa -out key.pem 2048
+openssl req -new -x509 -key key.pem -out cert.pem -days 1095 \
+-subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit/CN=$commonname/emailAddress=$email"
+cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
+
+# konfigurasi stunnel
+sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
+/etc/init.d/stunnel4 restart
+cd
+
+
+# Setting IPtables
+cat > /etc/iptables.up.rules <<-END
+*nat
+:PREROUTING ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+-A POSTROUTING -j SNAT --to-source xxxxxxxxx
+-A POSTROUTING -o eth0 -j MASQUERADE
+-A POSTROUTING -s 192.168.100.0/24 -o eth0 -j MASQUERADE
+-A POSTROUTING -s 10.1.0.0/24 -o eth0 -j MASQUERADE
+COMMIT
+*filter
+:INPUT ACCEPT [19406:27313311]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [9393:434129]
+:fail2ban-ssh - [0:0]
+-A FORWARD -i eth0 -o ppp0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -i ppp0 -o eth0 -j ACCEPT
+-A INPUT -p tcp -m multiport --dports 22 -j fail2ban-ssh
+-A INPUT -p ICMP --icmp-type 8 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 53 -j ACCEPT
+-A INPUT -p tcp --dport 22  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 80  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 80  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 8888  -m state --state NEW -j ACCEPT
+-A INPUT -p udp --dport 8888  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 142  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 143  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 109  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 110  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 443  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 1194  -m state --state NEW -j ACCEPT
+-A INPUT -p udp --dport 1194  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 1732  -m state --state NEW -j ACCEPT
+-A INPUT -p udp --dport 1732  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 3128  -m state --state NEW -j ACCEPT
+-A INPUT -p udp --dport 3128  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 7300  -m state --state NEW -j ACCEPT
+-A INPUT -p udp --dport 7300  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 8000  -m state --state NEW -j ACCEPT
+-A INPUT -p udp --dport 8000  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 8080  -m state --state NEW -j ACCEPT
+-A INPUT -p udp --dport 8080  -m state --state NEW -j ACCEPT
+-A INPUT -p tcp --dport 10000  -m state --state NEW -j ACCEPT
+-A fail2ban-ssh -j RETURN
+COMMIT
+*raw
+:PREROUTING ACCEPT [158575:227800758]
+:OUTPUT ACCEPT [46145:2312668]
+COMMIT
+*mangle
+:PREROUTING ACCEPT [158575:227800758]
+:INPUT ACCEPT [158575:227800758]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [46145:2312668]
+:POSTROUTING ACCEPT [46145:2312668]
+COMMIT
+END
+sed -i '$ i\iptables-restore < /etc/iptables.up.rules' /etc/rc.local
+sed -i $MYIP2 /etc/iptables.up.rules;
+iptables-restore < /etc/iptables.up.rules
+
+# xml parser
+cd
+apt-get install -y libxml-parser-perl
+
+
+clear
+DISTRO=`awk '/^ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }'`
+SERVER_IP=`ip -o route get to 8.8.8.8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p'`
+
+# Welcome Message
+echo 'Welcome to WhyTzy96 Script'
+echo 'Script Version: 0.1'
+echo 'Updated on: 07/08/2021'
+
+# Check if root
+if [ "$(id -u)" != "0" ]; then
+   echo "This script must be run as root" 1>&2
+   exit 1
+fi
+
+
+if test -f "/root/.tcat_installed"; then
+	echo 'TunnelCat VPN Software already installed!'
+	exit 1
+fi
+
+#PORT SERVER
+read -e -p 'Input your Server IP: ' -i $SERVER_IP SERVER_IP
+read -e -p 'Input OpenVPN TCP Port: ' -i '1103' OPENVPN_PORT
+read -e -p 'Input Privoxy Port: ' -i '8081' PRIVOXY_PORT
+read -e -p 'Input ohpserver Port: ' -i '7752' OHP_PORT
+read -e -p 'Input stunnel Port: ' -i '443' STUNNEL_PORT
+read -e -p 'Input DNS Tunnel Domain: ' -i 'dns.tunnel.example.com' DNS_TUNNEL_DOMAIN
+
+# Check input
+echo 'Checking Input...'
+if ! [[ $SERVER_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+	echo 'Server IP is invalid'
+	exit 1
+fi
+
+if ! [[ $OPENVPN_PORT =~ ^[0-9]+$ || $OHP_PORT =~ ^[0-9]+$ || $PRIVOXY_PORT =~ ^[0-9]+$ || $STUNNEL_PORT =~ ^[0-9]+$ ]]; then
+	echo 'Port is invalid'
+	exit 1
+fi
+
+echo 'Proceeding with the installation of dependencies'
+
+# Install Dependencies
+echo 'Installing Dependencies'
+DEBIAN_FRONTEND=noninteractive apt install -y resolvconf privoxy stunnel unzip iproute2 dns2tcp
+echo 'Dependencies Installed!' 
+
+# Install TunnelCat VPN Software
+echo 'Installing ohpserver'
+wget https://github.com/lfasmpao/open-http-puncher/releases/download/0.1/ohpserver-linux32.zip
+unzip ohpserver-linux32.zip
+rm ohpserver-linux32.zip
+mv ohpserver /usr/local/bin/
+chmod +x /usr/local/bin/ohpserver
+
+# Setup Privoxy
+echo 'Setting up Privoxy'
+mkdir /etc/privoxy/
+cat <<EOF > /etc/privoxy/config
+user-manual /usr/share/doc/privoxy/user-manual
+confdir /etc/privoxy
+logdir /var/log/privoxy
+actionsfile match-all.action
+actionsfile default.action
+actionsfile user.action
+filterfile default.filter
+filterfile user.filter
+logfile logfile
+listen-address  :$PRIVOXY_PORT
+toggle 1
+enable-remote-toggle  0
+enable-remote-http-toggle  0
+enable-edit-actions 0
+enforce-blocks 0
+buffer-limit 4096
+enable-proxy-authentication-forwarding 0
+forwarded-connect-retries  0
+accept-intercepted-requests 0
+allow-cgi-request-crunching 0
+split-large-forms 0
+keep-alive-timeout 5
+tolerate-pipelining 1
+socket-timeout 300
+EOF
+
+cat <<EOF1 > /etc/privoxy/user.action
+{ +block }
+/
+{ -block }
+*.tcat.me
+127.0.0.1
+$SERVER_IP
+EOF1
+
+# Setup ohpserver
+echo 'Setup ohpserver'
+cat <<EOF > /etc/systemd/system/ohpserver.service
+[Unit]
+Description=Daemonize OpenHTTP Puncher Server
+Wants=network.target
+After=network.target
+[Service]
+ExecStart=/usr/local/bin/ohpserver -port $OHP_PORT -proxy 127.0.0.1:$PRIVOXY_PORT -tunnel $SERVER_IP:$OPENVPN_PORT
+Restart=always
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo 'Setup dns2tcp'
+cat <<EOF > /etc/dns2tcpd.conf
+listen = 0.0.0.0
+port = 53
+user = nobody
+chroot = /tmp
+pid_file = /var/run/dns2tcp.pid
+domain = $DNS_TUNNEL_DOMAIN
+resources = ovpn:$SERVER_IP:$OPENVPN_PORT
+EOF
+
+# Start Services
+echo 'Running Services'
+echo "nameserver 8.8.8.8" > /etc/resolvconf/resolv.conf.d/head
+systemctl daemon-reload
+systemctl restart resolvconf
+systemctl restart stunnel4
+systemctl restart privoxy
+systemctl start ohpserver
+systemctl stop systemd-resolved
+systemctl start dns2tcp
+
+# Enable on boot
+echo 'Start services on boot'
+systemctl enable stunnel4
+systemctl enable privoxy
+systemctl enable dns2tcp
+systemctl enable ohpserver
+
+
+# Installed
+echo '' > /root/.tcat_installed
+
+cd /usr/local/sbin/
+rm -rf {accounts,base-ports,base-ports-wc,base-script,bench-network,clearcache,connections,create,create_random,create_trial,delete_expired,delete_all,diagnose,edit_dropbear,edit_openssh,edit_openvpn,edit_ports,edit_squid3,edit_stunnel4,locked_list,menu,options,ram,reboot_sys,reboot_sys_auto,restart_services,server,set_multilogin_autokill,set_multilogin_autokill_lib,show_ports,speedtest,user_delete,user_details,user_details_lib,user_extend,user_list,user_lock,user_unlock}
+wget -q 'https://raw.githubusercontent.com/xamjyss143/VPS/master/menu.zip'
+unzip -qq menu.zip
+rm -f menu.zip
+chmod +x ./*
+dos2unix ./* &> /dev/null
+sed -i 's|/etc/squid/squid.conf|/etc/privoxy/config|g' ./*
+sed -i 's|http_port|listen-address|g' ./*
+cd 
+
+# finishing
+cd
+chown -R www-data:www-data /home/vps/public_html
+/etc/init.d/nginx restart
+/etc/init.d/openvpn restart
+/etc/init.d/cron restart
+/etc/init.d/ssh restart
+/etc/init.d/dropbear restart
+/etc/init.d/fail2ban restart
+/etc/init.d/stunnel4 restart
+service php7.0-fpm restart
+service squid restart
+/etc/init.d/webmin restart
+
+# clearing history
+rm -rf ~/.bash_history && history -c
+echo "unset HISTFILE" >> /etc/profile
+
+# remove unnecessary files
+apt -y autoremove
+apt -y autoclean
+apt -y clean
+
+# Print info about script
+if [ "$(cat /sys/module/ipv6/parameters/disable)" -ge 1 ]; then
+	ipv6_status="ON"
+else
+	ipv6_status="OFF"
+fi
+timezone="$(timedatectl | grep -i 'Time zone' | awk '{print $3}')"
+ufwstatus="$(ufw status | grep Status | awk '{print $2}')"
+opensshport="$(netstat -ntlp | grep -i ssh | grep -i 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+dropbearport="$(netstat -nlpt | grep -i dropbear | grep -i 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+stunnel4port="$(netstat -nlpt | grep -i stunnel | grep -i 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+squidport="$(netstat -nlpt | grep -i squid | grep -i 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+openvpnport="$(netstat -nlpt | grep -i openvpn | grep -i 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+badvpnport="$(netstat -nlpt | grep -i badvpn | grep -i 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+wireguardport="$(wg | grep -i port | awk '{print $3}')"
+nginxport="$(netstat -nlpt | grep -i nginx | grep -i -m1 0.0.0.0 | awk '{print $4}' | cut -d: -f2)"
+ # Begin Installation by Updating and Upgrading machine and then Installing all our wanted packages/services to be install.
+ ScriptMessage
+ sleep 2
+ InstUpdates
+ 
+ # Configure OpenSSH and Dropbear
+ echo -e "Configuring ssh..."
+ InstSSH
+ 
+ # Configure Stunnel
+ echo -e "Configuring stunnel..."
+ InsStunnel
+ 
+ # Configure Privoxy and Squid
+ echo -e "Configuring proxy..."
+ InsProxy
+ 
+ # Configure OpenVPN
+ echo -e "Configuring OpenVPN..."
+ InsOpenVPN
+ 
+ # Configuring Nginx OVPN config download site
+ OvpnConfigs
+
+ # Some assistance and startup scripts
+ ConfStartup
+
+ # VPS Menu script v1.0
+ ConfMenu
+ 
+# info
+clear
+echo " "
+echo "INSTALLATION COMPLETE!"
+echo " "
+echo "------------------------- Configuration Setup Server ------------------------"
+echo "                    Copyright https://t.me/Jo3k3r                           "
+echo "                             Created By JokerTeam                          "
+echo "-----------------------------------------------------------------------------"
+echo ""  | tee -a log-install.txt
+echo "Server Information"  | tee -a log-install.txt
+echo "   - Timezone    : Africa/Johannesburg (GMT +2)"  | tee -a log-install.txt
+echo "   - Fail2Ban    : [ON]"  | tee -a log-install.txt
+echo "   - Dflate      : [ON]"  | tee -a log-install.txt
+echo "   - IPtables    : [ON]"  | tee -a log-install.txt
+echo "   - Auto-Reboot : [OFF]"  | tee -a log-install.txt
+echo "   - IPv6        : [OFF]"  | tee -a log-install.txt
+echo ""  | tee -a log-install.txt
+echo "Application & Port Information"  | tee -a log-install.txt
+echo "   - OpenVPN     : TCP 1103"  | tee -a log-install.txt
+echo "   - OpenSSH     : 22, 90, 143"  | tee -a log-install.txt
+echo "   - Stunnel4    : 444"  | tee -a log-install.txt
+echo "   - Dropbear    : 80, 109, 110, 442"  | tee -a log-install.txt
+echo "   - Squid Proxy : 3128, 8000, 8080, 8888"  | tee -a log-install.txt
+echo "   - Badvpn      : 7300"  | tee -a log-install.txt
+echo "   - Nginx       : 85"  | tee -a log-install.txt
+echo ""  | tee -a log-install.txt
+echo "Server Tools"  | tee -a log-install.txt
+echo "   - htop"  | tee -a log-install.txt
+echo "   - iftop"  | tee -a log-install.txt
+echo "   - mtr"  | tee -a log-install.txt
+echo "   - nethogs"  | tee -a log-install.txt
+echo "   - screenfetch"  | tee -a log-install.txt
+echo ""  | tee -a log-install.txt
+echo "Premium Script Information"  | tee -a log-install.txt
+echo "   To display list of commands: menu"  | tee -a log-install.txt
+echo ""  | tee -a log-install.txt
+echo "   Explanation of scripts and VPS setup" | tee -a log-install.txt
+echo "Important Information"  | tee -a log-install.txt
+echo "   - Download Config OpenVPN : http://$MYIP:85/Dopekid.ovpn"  | tee -a log-install.txt
+echo "   - Mirror (*.tar.gz)       : http://$MYIP:85/DopekidVPN.tar.gz"  | tee -a log-install.txt
+echo "   - Simple Panel            : http://$MYIP:85/"  | tee -a log-install.txt
+echo "   - Openvpn Monitor         : http://$MYIP:89/"  | tee -a log-install.txt
+echo "   - Webmin                  : http://$MYIP:10000/"  | tee -a log-install.txt
+echo "   - Installation Log        : cat /root/log-install.txt"  | tee -a log-install.txt
+echo 'Installation OHP Information'
+echo '##############################'
+echo 'Server IP:' $SERVER_IP
+echo 'OpenVPN Port:' $OPENVPN_PORT
+echo 'HTTP Port:' $PRIVOXY_PORT
+echo 'OHP Port:' $OHP_PORT
+echo 'stunnel Port:' $STUNNEL_PORT
+echo 'DNS Tunnel Domain:' $DNS_TUNNEL_DOMAIN
+echo ""  | tee -a log-install.txt
+echo "----------------- Script By JokerTeam(t.me/Jo3k3r)  -----------------"
+echo "                              Script By JokerTeam                             "
+echo "-----------------------------------------------------------------------------"
