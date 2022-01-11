@@ -12,7 +12,8 @@ SSH_Banner='https://pastebin.com/raw/CnKVT3de'
 Dropbear_Port1='800'
 Dropbear_Port2='442'
 
-function InstSSH(){
+
+
  # Removing some duplicated sshd server configs
  rm -f /etc/ssh/sshd_config*
  
@@ -87,19 +88,10 @@ MyDropbear
 
  # Restarting dropbear service
  systemctl restart dropbear
-}
 
-function InsStunnel(){
+
+
  wget https://raw.githubusercontent.com/Vpaproject/KinGmapua/master/s4 && bash s4
 
- # Restarting stunnel service
- systemctl restart $StunnelDir
 
-# Configure OpenSSH and Dropbear
- echo -e "Configuring ssh..."
- InstSSH
- 
- # Configure Stunnel
- echo -e "Configuring stunnel..."
- InsStunnel
 
