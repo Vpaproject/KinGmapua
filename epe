@@ -960,7 +960,7 @@ cat <<EOF152> /var/www/openvpn/tcp.ovpn
 client
 dev tun
 proto tcp
-remote $IPADDR $OpenVPN_Port1
+remote $IPADDR $OpenVPN_TCP_Port
 http-proxy $(curl -s http://ipinfo.io/ip || wget -q http://ipinfo.io/ip) $Proxy_Port
 resolv-retry infinite
 route-method exe
@@ -1013,7 +1013,7 @@ cat <<EOF16> /var/www/openvpn/udp.ovpn
 client
 dev tun
 proto udp
-remote $IPADDR $OpenVPN_Port2
+remote $IPADDR $OpenVPN_UDP_Port
 resolv-retry infinite
 nobind
 persist-key
@@ -1060,7 +1060,7 @@ cat <<EOF160> /var/www/openvpn/ssl.ovpn
 client
 dev tun
 proto tcp
-remote 127.0.0.1 $OpenVPN_Port1
+remote 127.0.0.1 $OpenVPN_TCP_Port
 route $IPADDR 255.255.255.255 net_gateway 
 resolv-retry infinite
 route-method exe
