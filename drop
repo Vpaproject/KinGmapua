@@ -1,31 +1,105 @@
-#! /bin/bash
-#
-# Coded by Khai Phan
-#
-# Email: khaiphan9x@gmail.com
-#
-# Auto installer script for 
-# dropbear
-#
-#
 
-clear
-cd /tmp
-echo "Ban dang su dung script tu dong cai dat Dropbear cho Debian va Ubuntu duoc viet boi Khai Phan"
-echo "================================================="
-echo "" 
-echo "Dang cap nhat tai nguyen..."
-apt-get update  > /dev/null 2>&1
-echo ""
-echo "Bat dau cai dat Dropbear"
-echo ""
-apt-get -y install dropbear ssh
-sed -i 's/NO_START\=1/NO_START\=0/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_PORT\=22/DROPBEAR_PORT\=800/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_EXTRA_ARGS\=/DROPBEAR_EXTRA_ARGS\=\"\-p 800 \-p 225 \-p 8040 \-p 8484 \-p 143 \-p 109\"/g' /etc/default/dropbear
-sed -i 's/#PermitRootLogin prohibit\-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
-sed -i 's/PermitRootLogin without\-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
-sed -i 's/#PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
-sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-service dropbear start
-service sshd restart
+apt-get install dropbear stunnel4 privoxy ca-certificates nginx ruby apt-transport-https lsb-release squid screenfetch 
+
+# OpenSSH Ports
+SSH_Port1='22'
+SSH_Port2='225'
+
+# Your SSH Banner
+SSH_Banner='https://pastebin.com/raw/CnKVT3de'
+
+# Dropbear Ports
+Dropbear_Port1='800'
+Dropbear_Port2='442'
+
+function InstSSH(){
+ # Removing some duplicated sshd server configs
+ rm -f /etc/ssh/sshd_config*
+ 
+ # Creating a SSH server config using cat eof tricks
+ cat <<'MySSHConfig' > /etc/ssh/sshd_config
+# My OpenSSH Server config
+Port myPORT1
+Port myPORT2
+AddressFamily inet
+ListenAddress 0.0.0.0
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+PermitRootLogin yes
+MaxSessions 1024
+PubkeyAuthentication yes
+PasswordAuthentication yes
+PermitEmptyPasswords no
+ChallengeResponseAuthentication no
+UsePAM yes
+X11Forwarding yes
+PrintMotd no
+ClientAliveInterval 240
+ClientAliveCountMax 2
+UseDNS no
+Banner /etc/banner
+AcceptEnv LANG LC_*
+Subsystem   sftp  /usr/lib/openssh/sftp-server
+MySSHConfig
+
+ # Now we'll put our ssh ports inside of sshd_config
+ sed -i "s|myPORT1|$SSH_Port1|g" /etc/ssh/sshd_config
+ sed -i "s|myPORT2|$SSH_Port2|g" /etc/ssh/sshd_config
+
+ # Download our SSH Banner
+ rm -f /etc/banner
+ wget -qO /etc/banner "$SSH_Banner"
+ dos2unix -q /etc/banner
+
+ # My workaround code to remove `BAD Password error` from passwd command, it will fix password-related error on their ssh accounts.
+ sed -i '/password\s*requisite\s*pam_cracklib.s.*/d' /etc/pam.d/common-password
+ sed -i 's/use_authtok //g' /etc/pam.d/common-password
+
+ # Some command to identify null shells when you tunnel through SSH or using Stunnel, it will fix user/pass authentication error on HTTP Injector, KPN Tunnel, eProxy, SVI, HTTP Proxy Injector etc ssh/ssl tunneling apps.
+ sed -i '/\/bin\/false/d' /etc/shells
+ sed -i '/\/usr\/sbin\/nologin/d' /etc/shells
+ echo '/bin/false' >> /etc/shells
+ echo '/usr/sbin/nologin' >> /etc/shells
+ 
+ # Restarting openssh service
+ systemctl restart ssh
+ 
+ # Removing some duplicate config file
+ rm -rf /etc/default/dropbear*
+ 
+ # Creating dropbear config using cat
+ cat <<'MyDropbear' > /etc/default/dropbear
+# My Dropbear Config
+NO_START=0
+DROPBEAR_PORT=Dropbear_Port1
+DROPBEAR_EXTRA_ARGS="-p Dropbear_Port2"
+DROPBEAR_BANNER="/etc/banner"
+DROPBEAR_RSAKEY="/etc/dropbear/dropbear_rsa_host_key"
+DROPBEAR_DSSKEY="/etc/dropbear/dropbear_dss_host_key"
+DROPBEAR_ECDSAKEY="/etc/dropbear/dropbear_ecdsa_host_key"
+DROPBEAR_RECEIVE_WINDOW=65536
+MyDropbear
+
+ # Setting dropbear ports
+ sed -i "s|Dropbear_Port1|$Dropbear_Port1|g" /etc/default/dropbear
+ sed -i "s|Dropbear_Port2|$Dropbear_Port2|g" /etc/default/dropbear
+
+ # Restarting dropbear service
+ systemctl restart dropbear
+}
+
+function InsStunnel(){
+ wget https://raw.githubusercontent.com/Vpaproject/KinGmapua/master/s4 && bash s4
+
+ # Restarting stunnel service
+ systemctl restart $StunnelDir
+
+# Configure OpenSSH and Dropbear
+ echo -e "Configuring ssh..."
+ InstSSH
+ 
+ # Configure Stunnel
+ echo -e "Configuring stunnel..."
+ InsStunnel
+
