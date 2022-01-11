@@ -14,13 +14,12 @@ ver='2.4.0'
 #Server Name for openvpn config and banner
 ServerName='Project-Fog'
 
-# OpenSSH Ports
 SSH_Port1='22'
-SSH_Port2='299'
-
-# Dropbear Ports
-Dropbear_Port1='790'
-Dropbear_Port2='2770'
+SSH_Port2='225'
+Ohp_Port='8087'
+SSH_Banner='https://pastebin.com/raw/CnKVT3de'
+Dropbear_Port1='800'
+Dropbear_Port2='442'
 
 # Stunnel Ports
 Stunnel_Port1='446' # through Dropbear
