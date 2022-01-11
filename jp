@@ -1,6 +1,8 @@
 #!/bin/bash
 SSH_Port1='22'
 SSH_Port2='225'
+Dropbear_Port1='800'
+Dropbear_Port2='442'
 SSH_Banner='https://gakod.com/banner'
 ******************************************
 # START SCRIPT ( guardeumvpn.tk )
